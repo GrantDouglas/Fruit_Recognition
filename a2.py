@@ -3,77 +3,56 @@
 
 import cv2
 import numpy as np
-np.set_printoptions(threshold=np.nan)
 from PIL import Image, ImageCms, ImageEnhance
 from skimage import color
+from scipy import ndimage
+import matplotlib.pyplot as plt
 
 
 def openImage(fname):
-	return Image.open(fname).convert('RGB')
+    return cv2.imread(fname)
 
 
 
 def shadowReduce(image):
-	print("do this")
 
-	# # create colour spaces
-	# srgb_p = ImageCms.createProfile("sRGB")
-	# lab_p  = ImageCms.createProfile("LAB")
+    # convert original to LAB, split the channels
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
 
-	# # build colour space conversions
-	# rgb2lab = ImageCms.buildTransformFromOpenProfiles(srgb_p, lab_p, "RGB", "LAB")
-	# Lab = ImageCms.applyTransform(image, rgb2lab)
+    # increase luminosity if the value will not overflow
+    l[l < 245] += 10
 
-	# # cather the images in the LAB colour spaces
-	# L, a, b = Lab.split()
-	# L.save('L.png')
-	# a.save('a.png')
-	# b.save('b.png')
+    # merge channels together and convert back to RGB
+    limg = cv2.merge((l, a, b))
+    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
+    # make intermediary for testing purposes
+    cv2.imwrite("shadow.png", img)
 
-	# print(Lab)
-	
-	enhancer = ImageEnhance.Brightness(image)
-	Lab = enhancer.enhance(1.3)
-
-
-	# # combined = ','.join(fin_L, a, b)
-
-	# lab2rgb = ImageCms.buildTransformFromOpenProfiles(lab_p, srgb_p, "LAB", "RGB")
-	# Lab2 = ImageCms.applyTransform(Lab, lab2rgb)
-
-
-	# initial = color.rgb2hsv(np.asarray(image))
-
-
-	# initial[:, :, 2] += 10
+    return img
 
 
 
-	# final = color.hsv2rgb(initial)
+def varianceFilter(img):
 
-	# img = Image.fromarray(final, 'RGB')
+    wmean, wsqrmean = (cv2.boxFilter(x, -1, (3, 3), borderType=cv2.BORDER_REFLECT) for x in (img, img*img))
+    win_var = wsqrmean - wmean**2
 
-	# img.save('final.png')
-
-
-
-
-	Lab.save('L_Change.png')
-
-
-
+    gray = cv2.cvtColor(win_var, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite("var.png", gray)
 
 
 def kMeansAlgo():
-	print("do this too")
-
+    print("do this too")
 
 
 if __name__ == '__main__':
-	image = openImage("./images/orange1.jpg")
+    image = openImage("./images/orange1.jpg")
 
-	shadowReduce(image)
+    shadow_res = shadowReduce(image)
+    varianceFilter(shadow_res)
+
 
 
 
