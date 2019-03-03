@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 from PIL import Image, ImageCms, ImageEnhance
 from skimage import color
 from scipy import ndimage
@@ -41,7 +42,7 @@ def varianceFilter(img):
 
     b, g, r = cv2.split(img)
 
-    NDI(img)
+    ndi = NDI(img)
 
 
 
@@ -49,23 +50,27 @@ def varianceFilter(img):
     g_var = ndimage.generic_filter(g, np.var, size=3)
     b_var = ndimage.generic_filter(b, np.var, size=3)
 
-    cv2.imwrite("var1.png", r_var)
-    cv2.imwrite("var2.png", g_var)
-    cv2.imwrite("var3.png", b_var)
 
-    fin = (r_var + g_var + b_var) / 3
+    mean = np.zeros(shape=(img.shape[0], img.shape[1]))
 
-    cv2.imwrite("var4.png", fin)
+    for k in range(0, img.shape[0]):
+        for i in range(0, img.shape[1]):
+            mean[k, i] = (int(r_var[k, i]) + int(g_var[k, i]) + int(b_var[k, i])) / 3
+
+
+    # fin = (r_var + g_var + b_var) / 3
+
+    cv2.imwrite("var4.png", mean)
 
     # gray_threshold
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
-            if fin[k, i] <= 90:
-                fin[k, i] = 0
+            if mean[k, i] <= 90:
+                mean[k, i] = 0
             else:
-                fin[k, i] = 255
+                mean[k, i] = 255
 
-    cv2.imwrite("var5.png", fin)
+    cv2.imwrite("mean.png", mean)
 
 
     # convert image to YCrBr color space
@@ -91,6 +96,68 @@ def varianceFilter(img):
                 br[k, i] = 255
 
     cv2.imwrite("br.png", br)
+
+
+    # final = np.zeros(shape=(img.shape[0], img.shape[1]))
+
+    # for k in range(0, img.shape[0]):
+    #     for i in range(0, img.shape[1]):
+    #         val = [ndi[k, i], mean[k, i], cr[k, i], br[k, i]]
+    #         if len(set(val)) == 1:
+    #             pixel = 0
+    #         else:
+    #             pixel = 255
+
+    #         final[k, i] = pixel
+
+
+    fin_ndi = cv2.imread("ndi.png", cv2.IMREAD_GRAYSCALE)
+    fin_mean = cv2.imread("mean.png", cv2.IMREAD_GRAYSCALE)
+    fin_cr = cv2.imread("cr.png", cv2.IMREAD_GRAYSCALE)
+    fin_br = cv2.imread("br.png", cv2.IMREAD_GRAYSCALE)
+
+
+    fin_ndi[fin_ndi < 255] = 0
+    fin_ndi[fin_ndi == 255] = 1
+
+    fin_mean[fin_mean < 255] = 0
+    fin_mean[fin_mean == 255] = 1
+
+    fin_cr[fin_cr < 255] = 0
+    fin_cr[fin_cr == 255] = 1
+
+    fin_br[fin_br < 255] = 0
+    fin_br[fin_br == 255] = 1
+
+    res = np.logical_and.reduce([fin_ndi, fin_mean, fin_cr, fin_br])
+    res.dtype = 'uint8'
+
+    print(res)
+
+    cv2.imwrite("final.png", res * 255)
+
+
+
+    # bin_ndi = cv2.threshold(fin_ndi, 255, 1, cv2.THRESH_BINARY)
+    # bin_mean = cv2.threshold(fin_mean, 255, 1, cv2.THRESH_BINARY)
+    # bin_cr = cv2.threshold(fin_cr, 255, 1, cv2.THRESH_BINARY)
+    # bin_br = cv2.threshold(fin_br, 255, 1, cv2.THRESH_BINARY)
+
+
+    # print(bin_ndi)
+
+    # res1 = cv2.bitwise_and(bin_ndi, bin_mean)
+    # res2 = cv2.bitwise_and(res1, bin_cr)
+    # res3 = cv2.bitwise_and(res2, bin_br)
+
+
+
+    # final = cr + br + mean + ndi
+
+    # cv2.imwrite("final.png", res3)
+
+
+
 
 
 def NDI(img):
@@ -120,6 +187,8 @@ def NDI(img):
     fin = np.zeros(shape=(img.shape[0], img.shape[1]))
 
     cv2.imwrite("ndi.png", ndi)
+
+    return ndi
 
 
 
