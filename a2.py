@@ -44,35 +44,23 @@ def varianceFilter(img):
 
     ndi = NDI(img)
 
-    print(img)
-
-
-
     r_var = ndimage.generic_filter(r, np.var, size=3)
     g_var = ndimage.generic_filter(g, np.var, size=3)
     b_var = ndimage.generic_filter(b, np.var, size=3)
 
-
     mean = np.zeros(shape=(img.shape[0], img.shape[1]))
-
-    for k in range(0, img.shape[0]):
-        for i in range(0, img.shape[1]):
-            mean[k, i] = (int(r_var[k, i]) + int(g_var[k, i]) + int(b_var[k, i])) / 3
-
-
-    # fin = (r_var + g_var + b_var) / 3
-
-    cv2.imwrite("var4.png", mean)
 
     # gray_threshold
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
-            if mean[k, i] <= 90:
+            mean_val = int(r_var[k, i]) + int(g_var[k, i]) + int(b_var[k, i])
+            if mean_val <= 270:
                 mean[k, i] = 0
             else:
                 mean[k, i] = 255
 
-    cv2.imwrite("mean.png", mean)
+
+    # cv2.imwrite("mean.png", mean)
 
 
     # convert image to YCrcb color space
@@ -80,24 +68,34 @@ def varianceFilter(img):
     y, cr, cb = cv2.split(ycrcb)
 
     # cr threshold
-    for k in range(0, img.shape[0]):
-        for i in range(0, img.shape[1]):
-            if cr[k, i] >= 140:
-                cr[k, i] = 0
-            else:
-                cr[k, i] = 255
+    # for k in range(0, img.shape[0]):
+    #     for i in range(0, img.shape[1]):
+    #         if cr[k, i] >= 140:
+    #             cr[k, i] = 0
+    #         else:
+    #             cr[k, i] = 255
 
-    cv2.imwrite("cr.png", cr)
+    cr[cr >= 140] = 254
+    cr[cr < 140] = 1
+
+    cr[cr == 1] = 255
+    cr[cr == 254] = 0
+
+    # cv2.imwrite("cr.png", cr)
 
     # cb threshold
-    for k in range(0, img.shape[0]):
-        for i in range(0, img.shape[1]):
-            if cb[k, i] > 45 and cb[k, i] < 100:
-                cb[k, i] = 255
-            else:
-                cb[k, i] = 0
+    # for k in range(0, img.shape[0]):
+    #     for i in range(0, img.shape[1]):
+    #         if cb[k, i] > 30 and cb[k, i] < 100:
+    #             cb[k, i] = 255
+    #         else:
+    #             cb[k, i] = 0
 
-    cv2.imwrite("cb.png", cb)
+
+    cb[(cb > 100) | (cb < 30)] = 0
+    cb[(cb >= 30) & (cb <= 100)] = 255
+
+    # cv2.imwrite("cb.png", cb)
 
 
     # final = np.zeros(shape=(img.shape[0], img.shape[1]))
@@ -113,23 +111,23 @@ def varianceFilter(img):
     #         final[k, i] = pixel
 
 
-    fin_ndi = cv2.imread("ndi.png", cv2.IMREAD_GRAYSCALE)
-    fin_mean = cv2.imread("mean.png", cv2.IMREAD_GRAYSCALE)
-    fin_cr = cv2.imread("cr.png", cv2.IMREAD_GRAYSCALE)
-    fin_cb = cv2.imread("cb.png", cv2.IMREAD_GRAYSCALE)
+    # fin_ndi = cv2.imread("ndi.png", cv2.IMREAD_GRAYSCALE)
+    # fin_mean = cv2.imread("mean.png", cv2.IMREAD_GRAYSCALE)
+    # fin_cr = cv2.imread("cr.png", cv2.IMREAD_GRAYSCALE)
+    # fin_cb = cv2.imread("cb.png", cv2.IMREAD_GRAYSCALE)
 
 
-    fin_ndi[fin_ndi < 255] = 0
-    fin_ndi[fin_ndi == 255] = 1
+    ndi[ndi < 255] = 0
+    ndi[ndi == 255] = 1
 
-    fin_mean[fin_mean < 255] = 0
-    fin_mean[fin_mean == 255] = 1
+    mean[mean < 255] = 0
+    mean[mean == 255] = 1
 
-    fin_cr[fin_cr < 255] = 0
-    fin_cr[fin_cr == 255] = 1
+    cr[cr < 255] = 0
+    cr[cr == 255] = 1
 
-    fin_cb[fin_cb < 255] = 0
-    fin_cb[fin_cb == 255] = 1
+    cb[cb < 255] = 0
+    cb[cb == 255] = 1
 
     res = np.zeros(shape=(img.shape[0], img.shape[1]))
 
@@ -139,7 +137,7 @@ def varianceFilter(img):
         for i in range(0, img.shape[1]):
 
 
-            if fin_ndi[k, i] == 0 and fin_mean[k, i] == 0 and fin_cr[k, i] == 0 and fin_cb[k, i] == 1:
+            if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 1:
                res[k, i] = 0
             else:
                res[k, i] = 255
@@ -150,7 +148,7 @@ def varianceFilter(img):
 
    #print(res)
 
-    cv2.imwrite("final.png", res)
+    # cv2.imwrite("final.png", res)
 
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
@@ -158,6 +156,8 @@ def varianceFilter(img):
                 b[k, i] = 0
                 g[k, i] = 0
                 r[k, i] = 0
+
+
 
 
     final = cv2.merge((b, g, r))
@@ -205,13 +205,9 @@ def NDI(img):
 
                 if val > 0:
                     ndi[k, i] = 255
-                else:
-                    ndi[k, i] = 0
-            else:
-                ndi[k, i] = 0
 
 
-    cv2.imwrite("ndi.png", ndi)
+    # cv2.imwrite("ndi.png", ndi)
 
     return ndi
 
@@ -224,5 +220,5 @@ def kMeansAlgo():
 if __name__ == '__main__':
     image = openImage("./images/orange1.jpg")
 
-    shadow_res = shadowReduce(image)
-    varianceFilter(shadow_res)
+    # shadow_res = shadowReduce(image)
+    varianceFilter(image)
