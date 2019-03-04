@@ -8,16 +8,41 @@ from PIL import Image, ImageCms, ImageEnhance
 from skimage import color
 from scipy import ndimage
 import matplotlib.pyplot as plt
+import os
 
 
 def openImage(fname):
     return cv2.imread(fname)
 
 
+<<<<<<< Updated upstream
 def varianceFilter(img):
+=======
 
-    wmean, wsqrmean = (cv2.boxFilter(x, -1, (3, 3), borderType=cv2.BORDER_REFLECT) for x in (img, img*img))
-    win_var = wsqrmean - wmean**2
+def shadowReduce(image):
+
+    # convert original to LAB, split the channels
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+
+    # increase luminosity if the value will not overflow
+    l[l < 245] += 10
+
+    # merge channels together and convert back to RGB
+    limg = cv2.merge((l, a, b))
+    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+    # make intermediary for testing purposes
+    cv2.imwrite("shadow.png", img)
+
+    return img
+
+
+
+def varianceFilter(img, fname):
+
+>>>>>>> Stashed changes
+
 
     b, g, r = cv2.split(img)
 
@@ -52,8 +77,8 @@ def varianceFilter(img):
 
 
 
-    cb[(cb > 100) | (cb < 30)] = 0
-    cb[(cb >= 30) & (cb <= 100)] = 255
+    cb[(cb > 120) | (cb < 30)] = 0
+    cb[(cb >= 30) & (cb <= 120)] = 255
 
 
    # gray_threshold
@@ -66,9 +91,13 @@ def varianceFilter(img):
                r[k, i] = 0
 
 
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
+
     final = cv2.merge((b, g, r))
 
-    cv2.imwrite("yay.png", final)
+    cv2.imwrite("results/" + os.path.splitext(fname)[0] + "_fix.png", final)
 
 
 
@@ -96,13 +125,15 @@ def NDI(img):
     return ndi
 
 
-
-def kMeansAlgo():
-    print("do this too")
-
-
 if __name__ == '__main__':
-    image = openImage("./images/citrus6.jpg")
 
-    # shadow_res = shadowReduce(image)
-    varianceFilter(image)
+    imageList = os.listdir("./images/")
+
+    for k in imageList:
+
+        image = cv2.imread("images/" + k, 1)
+
+        # shadow_res = shadowReduce(image)
+        varianceFilter(image, k)
+
+
