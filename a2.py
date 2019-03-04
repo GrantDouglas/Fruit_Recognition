@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 
 import cv2
@@ -12,27 +12,6 @@ import matplotlib.pyplot as plt
 
 def openImage(fname):
     return cv2.imread(fname)
-
-
-
-def shadowReduce(image):
-
-    # convert original to LAB, split the channels
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-
-    # increase luminosity if the value will not overflow
-    l[l < 245] += 10
-
-    # merge channels together and convert back to RGB
-    limg = cv2.merge((l, a, b))
-    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-
-    # make intermediary for testing purposes
-    cv2.imwrite("shadow.png", img)
-
-    return img
-
 
 
 def varianceFilter(img):
@@ -60,20 +39,10 @@ def varianceFilter(img):
                 mean[k, i] = 255
 
 
-    # cv2.imwrite("mean.png", mean)
-
-
     # convert image to YCrcb color space
     ycrcb = cv2.cvtColor(img, 36)
     y, cr, cb = cv2.split(ycrcb)
 
-    # cr threshold
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-    #         if cr[k, i] >= 140:
-    #             cr[k, i] = 0
-    #         else:
-    #             cr[k, i] = 255
 
     cr[cr >= 140] = 254
     cr[cr < 140] = 1
@@ -81,110 +50,25 @@ def varianceFilter(img):
     cr[cr == 1] = 255
     cr[cr == 254] = 0
 
-    # cv2.imwrite("cr.png", cr)
-
-    # cb threshold
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-    #         if cb[k, i] > 30 and cb[k, i] < 100:
-    #             cb[k, i] = 255
-    #         else:
-    #             cb[k, i] = 0
 
 
     cb[(cb > 100) | (cb < 30)] = 0
     cb[(cb >= 30) & (cb <= 100)] = 255
-
-    # cv2.imwrite("cb.png", cb)
-
-
-    # final = np.zeros(shape=(img.shape[0], img.shape[1]))
-
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-    #         val = [ndi[k, i], mean[k, i], cr[k, i], cb[k, i]]
-    #         if len(set(val)) == 1:
-    #             pixel = 0
-    #         else:
-    #             pixel = 255
-
-    #         final[k, i] = pixel
-
-
-    # fin_ndi = cv2.imread("ndi.png", cv2.IMREAD_GRAYSCALE)
-    # fin_mean = cv2.imread("mean.png", cv2.IMREAD_GRAYSCALE)
-    # fin_cr = cv2.imread("cr.png", cv2.IMREAD_GRAYSCALE)
-    # fin_cb = cv2.imread("cb.png", cv2.IMREAD_GRAYSCALE)
-
-
-    ndi[ndi < 255] = 0
-    ndi[ndi == 255] = 1
-
-    mean[mean < 255] = 0
-    mean[mean == 255] = 1
-
-    cr[cr < 255] = 0
-    cr[cr == 255] = 1
-
-    cb[cb < 255] = 0
-    cb[cb == 255] = 1
-
-    res = np.zeros(shape=(img.shape[0], img.shape[1]))
 
 
    # gray_threshold
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
 
-
-            if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 1:
-               res[k, i] = 0
-            else:
-               res[k, i] = 255
-
-
-   #res = np.logical_and.reduce([fin_ndi, fin_mean, fin_cr, fin_cb])
-   #res.dtype = 'uint8'
-
-   #print(res)
-
-    # cv2.imwrite("final.png", res)
-
-    for k in range(0, img.shape[0]):
-        for i in range(0, img.shape[1]):
-            if res[k, i] == 0:
-                b[k, i] = 0
-                g[k, i] = 0
-                r[k, i] = 0
-
-
+            if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 255:
+               b[k, i] = 0
+               g[k, i] = 0
+               r[k, i] = 0
 
 
     final = cv2.merge((b, g, r))
 
     cv2.imwrite("yay.png", final)
-
-
-
-
-    # bin_ndi = cv2.threshold(fin_ndi, 255, 1, cv2.THRESH_BINARY)
-    # bin_mean = cv2.threshold(fin_mean, 255, 1, cv2.THRESH_BINARY)
-    # bin_cr = cv2.threshold(fin_cr, 255, 1, cv2.THRESH_BINARY)
-    # bin_cb = cv2.threshold(fin_cb, 255, 1, cv2.THRESH_BINARY)
-
-
-    # print(bin_ndi)
-
-    # res1 = cv2.bitwise_and(bin_ndi, bin_mean)
-    # res2 = cv2.bitwise_and(res1, bin_cr)
-    # res3 = cv2.bitwise_and(res2, bin_cb)
-
-
-
-    # final = cr + cb + mean + ndi
-
-    # cv2.imwrite("final.png", res3)
-
 
 
 
@@ -218,7 +102,7 @@ def kMeansAlgo():
 
 
 if __name__ == '__main__':
-    image = openImage("./images/orange1.jpg")
+    image = openImage("./images/citrus6.jpg")
 
     # shadow_res = shadowReduce(image)
     varianceFilter(image)
