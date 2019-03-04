@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 
 import cv2
@@ -66,9 +66,9 @@ def varianceFilter(img):
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
             if mean[k, i] <= 90:
-                mean[k, i] = 0
-            else:
                 mean[k, i] = 255
+            else:
+                mean[k, i] = 0
 
     cv2.imwrite("mean.png", mean)
 
@@ -129,12 +129,26 @@ def varianceFilter(img):
     fin_br[fin_br < 255] = 0
     fin_br[fin_br == 255] = 1
 
-    res = np.logical_and.reduce([fin_ndi, fin_mean, fin_cr, fin_br])
-    res.dtype = 'uint8'
+    res = np.zeros(shape=(img.shape[0], img.shape[1]))
 
-    print(res)
 
-    cv2.imwrite("final.png", res * 255)
+   # gray_threshold
+    for k in range(0, img.shape[0]):
+        for i in range(0, img.shape[1]):
+
+
+            if fin_ndi[k,i] == 1 and fin_mean[k,i] == 1 and fin_cr[k,i] == 1 and fin_br[k,i] == 1:
+               res[k, i] = 255
+            else:
+               res[k, i] = 0
+
+
+   #res = np.logical_and.reduce([fin_ndi, fin_mean, fin_cr, fin_br])
+   #res.dtype = 'uint8'
+
+   #print(res)
+
+    cv2.imwrite("final.png", res)
 
 
 
@@ -164,7 +178,6 @@ def NDI(img):
 
     b, g, r = cv2.split(img)
 
-
     ndi = np.zeros(shape=(img.shape[0], img.shape[1]))
 
     for k in range(0, img.shape[0]):
@@ -173,18 +186,15 @@ def NDI(img):
             bot = int(g[k, i]) + int(r[k, i])
 
             if bot != 0:
-                val = top / bot
+                val = float(top) / float(bot)
 
                 if val > 0:
                     ndi[k, i] = 255
-                elif val == 0:
+                else:
                     ndi[k, i] = 0
             else:
                 ndi[k, i] = 0
 
-
-
-    fin = np.zeros(shape=(img.shape[0], img.shape[1]))
 
     cv2.imwrite("ndi.png", ndi)
 
@@ -201,8 +211,3 @@ if __name__ == '__main__':
 
     shadow_res = shadowReduce(image)
     varianceFilter(shadow_res)
-
-
-
-
-
