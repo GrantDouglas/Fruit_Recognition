@@ -1,23 +1,18 @@
-#!/usr/local/bin/python
+#!/usr/bin/python3
 
 
 import cv2
 import numpy as np
 np.set_printoptions(threshold=np.inf)
-from PIL import Image, ImageCms, ImageEnhance
-from skimage import color
 from scipy import ndimage
-import matplotlib.pyplot as plt
 import os
+from joblib import Parallel, delayed
+import multiprocessing
 
 
 def openImage(fname):
     return cv2.imread(fname)
 
-
-<<<<<<< Updated upstream
-def varianceFilter(img):
-=======
 
 def shadowReduce(image):
 
@@ -39,10 +34,11 @@ def shadowReduce(image):
 
 
 
-def varianceFilter(img, fname):
+def varianceFilter(fname):
 
->>>>>>> Stashed changes
+    print(fname)
 
+    img = cv2.imread("images/" + fname, 1)
 
     b, g, r = cv2.split(img)
 
@@ -97,12 +93,20 @@ def varianceFilter(img, fname):
 
     final = cv2.merge((b, g, r))
 
-    cv2.imwrite("results/" + os.path.splitext(fname)[0] + "_fix.png", final)
+    cv2.imwrite("results/" + os.path.splitext(fname)[0] + "_fix.jpg", final)
 
 
 
 
 def NDI(img):
+
+    # for k in imageList:
+
+
+
+    #     # shadow_res = shadowReduce(image)
+    #     varianceFilter( k)
+
 
     b, g, r = cv2.split(img)
 
@@ -129,11 +133,17 @@ if __name__ == '__main__':
 
     imageList = os.listdir("./images/")
 
-    for k in imageList:
+    cpu_count = multiprocessing.cpu_count()
 
-        image = cv2.imread("images/" + k, 1)
+    res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
 
-        # shadow_res = shadowReduce(image)
-        varianceFilter(image, k)
+
+
+    # for k in imageList:
+
+
+
+    #     # shadow_res = shadowReduce(image)
+    #     varianceFilter( k)
 
 
