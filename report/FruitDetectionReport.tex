@@ -9,6 +9,10 @@
 \usepackage{xcolor}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+    
+\graphicspath{ {./imgs/} }
+    
 \begin{document}
 
 \title{Orange Detection Algorithm}
@@ -42,48 +46,53 @@ Counting and identifying the number of ripe fruits is important to automate harv
 
 \section{Ease of Use}
 
-\subsection{Maintaining the Integrity of the Specifications}
+\subsection{How we Selected the threshhold vales}
 
 
 \section{Algorithms}
 
 
 
-\subsection{Stages}
-\begin{enumerate}
-\item Use either SI (MKS) or CGS as primary units. (SI units are encouraged.) English units may be used as secondary units (in parentheses). An exception would be the use of English units as identifiers in trade, such as ``3.5-inch disk drive''.
-\item Avoid combining SI and CGS units, such as current in amperes and magnetic field in oersteds. This often leads to confusion because equations do not balance dimensionally. If you must use mixed units, clearly state the units for each quantity that you use in an equation.
-\item Do not mix complete spellings and abbreviations of units: ``Wb/m\textsuperscript{2}'' or ``webers per square meter'', not ``webers/m\textsuperscript{2}''. Spell out units when they appear in text: ``. . . a few henries'', not ``. . . a few H''.
-\item Use a zero before decimal points: ``0.25'', not ``.25''. Use ``cm\textsuperscript{3}'', not ``cc''.)
-\end{enumerate}
 
-\subsection{Equations}
+\subsection{Values} \label{values}
 
 
-
-\begin{table}[htbp]
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
-\end{tabular}
-\label{tab1}
-\end{center}
-\end{table}
-
-\begin{figure}[htbp]
-%\centerline{\includegraphics{fig1.png}}
-\caption{Example of a figure caption.}
+\begin{figure*}[htbp]
+\centerline{\includegraphics[width=\textwidth]{algo_stages}}
+\caption{Outline of the proccess of the stages of the algorithm}
 \label{fig}
-\end{figure}
+\end{figure*}
 
+\subsection{Stages}
+
+
+
+\subsubsection{Step 1}
+Run NDI 
+
+\subsubsection{Step 2}
+In the RGB colour space run a mean filter.
+
+\subsubsection{Step 3}
+convert the image to the YCrCb colour space.
+
+run a threshold on the Cr values. how the threshold is discusses in sec. \ref{values}. 
+
+
+\subsubsection{Step 4}
+
+run a threshold on the Cb values. how the threshold is discusses in sec. \ref{values}. 
+
+
+
+Then do a bit-wise and to create a mask
+
+\begin{equation}
+pixel_{final}=pixel_{NDI} \land pixel_{mean} \land pixel_{Cr} \land pixel_{Cb} 
+\end{equation}
+
+\subsubsection{Step 5}
+Do a circle count  on the mask image
 
 
 \begin{thebibliography}{00}

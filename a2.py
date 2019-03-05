@@ -86,6 +86,18 @@ def varianceFilter(fname):
 
 
 
+    ## Print all the intermidatrys
+    #if not os.path.exists('intermediaries'):
+    #    os.makedirs('intermediaries')
+
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_NDI.jpg", ndi)
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mean.jpg", mean)
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cr.jpg", cr)
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cb.jpg", cb)
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mask.jpg", mask)
+    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_final.jpg", final)
+
+
 
 def NDI(img):
 
@@ -110,8 +122,8 @@ def NDI(img):
 if __name__ == '__main__':
 
     imageList = os.listdir("./images/")
-
     cpu_count = multiprocessing.cpu_count()
-
     res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
 
+
+    #varianceFilter("citrus4.jpg")
