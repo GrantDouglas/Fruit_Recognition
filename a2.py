@@ -13,27 +13,6 @@ import multiprocessing
 def openImage(fname):
     return cv2.imread(fname)
 
-
-def shadowReduce(image):
-
-    # convert original to LAB, split the channels
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-
-    # increase luminosity if the value will not overflow
-    l[l < 245] += 10
-
-    # merge channels together and convert back to RGB
-    limg = cv2.merge((l, a, b))
-    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-
-    # make intermediary for testing purposes
-    cv2.imwrite("shadow.png", img)
-
-    return img
-
-
-
 def varianceFilter(fname):
 
     print(fname)
@@ -71,10 +50,11 @@ def varianceFilter(fname):
     cr[cr == 1] = 255
     cr[cr == 254] = 0
 
-
-
     cb[(cb > 120) | (cb < 30)] = 0
     cb[(cb >= 30) & (cb <= 120)] = 255
+
+
+    mask = np.full((img.shape[0], img.shape[1]), 255)
 
 
    # gray_threshold
@@ -82,13 +62,22 @@ def varianceFilter(fname):
         for i in range(0, img.shape[1]):
 
             if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 255:
-               b[k, i] = 0
-               g[k, i] = 0
-               r[k, i] = 0
+                mask[k, i] = 0
+                b[k, i] = 0
+                g[k, i] = 0
+                r[k, i] = 0
+
+
+
 
 
     if not os.path.exists('results'):
         os.makedirs('results')
+
+    if not os.path.exists('masks'):
+        os.makedirs('masks')
+
+    cv2.imwrite("masks/" + os.path.splitext(fname)[0] + "_mask.jpg", mask)
 
 
     final = cv2.merge((b, g, r))
@@ -99,14 +88,6 @@ def varianceFilter(fname):
 
 
 def NDI(img):
-
-    # for k in imageList:
-
-
-
-    #     # shadow_res = shadowReduce(image)
-    #     varianceFilter( k)
-
 
     b, g, r = cv2.split(img)
 
@@ -123,9 +104,6 @@ def NDI(img):
                 if val > 0:
                     ndi[k, i] = 255
 
-
-    # cv2.imwrite("ndi.png", ndi)
-
     return ndi
 
 
@@ -136,14 +114,4 @@ if __name__ == '__main__':
     cpu_count = multiprocessing.cpu_count()
 
     res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
-
-
-
-    # for k in imageList:
-
-
-
-    #     # shadow_res = shadowReduce(image)
-    #     varianceFilter( k)
-
 
