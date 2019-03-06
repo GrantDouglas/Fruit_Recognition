@@ -17,6 +17,8 @@ import numpy as np
 def circleCount(fname):
 
 	img = cv2.imread("masks/" + fname,0)
+	color = cv2.imread("images/citrus1.jpg",1)
+
 	#kernel = np.ones((10,10),np.uint8)
 
 	#img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
@@ -33,33 +35,83 @@ def circleCount(fname):
 
 
 	count = 0
+	num = 0
+	averageR = 0
 	for i in circles[0,:]:
 
- 		if  i[2] < 500:
+
+ 		if  (averageR == 0 and i[2] < 450) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
 
 			mask = np.zeros(shape=(img.shape[0], img.shape[1]))
 			cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
 			cv2.imwrite("mask.png", mask)
-			vals = countWhite(mask, img, (i[0],i[1]),i[2])
+			vals = countWhite(mask, img, (i[0],i[1]),i[2], num)
 
-			if vals[1] >  vals[0] / 2:
+			ratio = int(vals[1] / float(vals[0])*100)
+
+			if ratio >= 50:
 				count += 1
+
+
+
+				if averageR == 0:
+					averageR = i[2]
+				else:
+					if i[2] <= averageR*1.5 and  i[2] >= averageR*0.5:
+						averageR = (averageR + i[2]) / 2.0
+					else:
+						print("Circcle that is > 50% is either too big or too small");
+						cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
+						# draw the center of the circle
+						cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
+						continue
+
 				# draw the outer circle
 				cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),10)
 			    # draw the center of the circle
+				#cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),5)
+				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
 
-				cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),5)
+				cv2.circle(color,(i[0],i[1]),i[2],(0,255,0),10)
+			    # draw the center of the circle
+				cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
 
+			elif ratio >= 30:
+
+				print(ratio)
+				if i[2] <= averageR*1.2 and  i[2] >= averageR*0.2:
+					cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
+
+					cv2.circle(color,(i[0],i[1]),i[2],(66, 134, 244),10)
+				    # draw the center of the circle
+					cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
+
+				else:
+					cv2.circle(cimg,(i[0],i[1]),i[2],(0, 8, 255),10)
+
+				# draw the center of the circle
+				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
+			else:
+
+				print(ratio)
+				cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
+				# draw the center of the circle
+				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
+
+
+		num +=1
 
 
 	print(count)
 	cv2.imwrite("final.png", cimg)
+	cv2.imwrite("out.png", color)
 
 
-def countWhite(mask, img, center, radius):
+def countWhite(mask, img, center, radius, index):
 
 	numTotal = int(3.14 * radius**2)
 	numWhite = 0
+	numOutside = numTotal
 
 
 	lowerbound_out = max(int(center[1]) - radius, 0)
@@ -74,9 +126,18 @@ def countWhite(mask, img, center, radius):
 			if (mask[k,i] == 255 and img[k,i] == 0):
 				numWhite += 1
 
+			if (mask[k,i] == 255):
+				numOutside -= 1
 
 
-	print(numTotal, " ", numWhite)
+
+	if (numOutside / float(numTotal)*100) > 40:
+		print("too much outside of img: ", (numOutside / float(numTotal)*100))
+
+	else:
+		numWhite += numOutside
+
+	print("index:", index, numTotal, numWhite)
 
 	return (numTotal, numWhite)
 
