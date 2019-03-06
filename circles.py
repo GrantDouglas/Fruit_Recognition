@@ -40,7 +40,7 @@ def circleCount(fname):
 	for i in circles[0,:]:
 
 
- 		if  (averageR == 0 and i[2] < 450) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
+ 		if  (averageR == 0) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
 
 			mask = np.zeros(shape=(img.shape[0], img.shape[1]))
 			cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
@@ -52,26 +52,13 @@ def circleCount(fname):
 			if ratio >= 50:
 				count += 1
 
-
-
 				if averageR == 0:
 					averageR = i[2]
 				else:
-					if i[2] <= averageR*1.5 and  i[2] >= averageR*0.5:
-						averageR = (averageR + i[2]) / 2.0
-					else:
-						print("Circcle that is > 50% is either too big or too small");
-						cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
-						# draw the center of the circle
-						cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
-						continue
+					averageR = (averageR + i[2]) / 2.0
 
 				# draw the outer circle
 				cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),10)
-			    # draw the center of the circle
-				#cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),5)
-				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
-
 				cv2.circle(color,(i[0],i[1]),i[2],(0,255,0),10)
 			    # draw the center of the circle
 				cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
@@ -80,23 +67,21 @@ def circleCount(fname):
 
 				print(ratio)
 				if i[2] <= averageR*1.2 and  i[2] >= averageR*0.2:
-					cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
 
+					cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
 					cv2.circle(color,(i[0],i[1]),i[2],(66, 134, 244),10)
 				    # draw the center of the circle
 					cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
 
 				else:
 					cv2.circle(cimg,(i[0],i[1]),i[2],(0, 8, 255),10)
-
-				# draw the center of the circle
-				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
 			else:
 
 				print(ratio)
 				cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
-				# draw the center of the circle
-				cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(0,0,255),2,cv2.LINE_AA)
+
+			# write the circle number
+			cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
 
 
 		num +=1
