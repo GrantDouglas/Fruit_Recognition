@@ -11,6 +11,8 @@
 import os
 import cv2
 import numpy as np
+from joblib import Parallel, delayed
+import multiprocessing
 
 
 BLUE = (255, 0, 0)
@@ -30,7 +32,7 @@ def circleCount(fname):
     img = cv2.medianBlur(img,5)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,3,150,
+    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2.5,150,
                                 param1=100,param2=100, minRadius=0,maxRadius=3000)
 
     circles = np.uint16(np.around(circles))
@@ -117,22 +119,38 @@ def countWhite(mask, img, center, radius, index):
     numOutside = numTotal
 
 
-    lowerbound_out = max(int(center[1]) - radius, 0)
-    upperbound_out = min(center[1] + radius, img.shape[0])
+#    lowerbound_out = max(int(center[1]) - radius, 0)
+#    upperbound_out = min(center[1] + radius, img.shape[0])
+#
+#    lowerbound_in = max(int(center[0]) - radius, 0)
+#    upperbound_in = min(center[0] + radius, img.shape[1])
+#
+#    for k in range(lowerbound_out, upperbound_out):
+#        for i in range(lowerbound_in, upperbound_in):
+#
+#            if (mask[k,i] == 255 and img[k,i] == 0):
+#                numWhite += 1
+#
+#            if (mask[k,i] == 255):
+#                numOutside -= 1
+#
+#
 
-    lowerbound_in = max(int(center[0]) - radius, 0)
-    upperbound_in = min(center[0] + radius, img.shape[1])
 
-    for k in range(lowerbound_out, upperbound_out):
-        for i in range(lowerbound_in, upperbound_in):
+    white[(mask == 255) & (img == 0)] = 255
+    count[(mask == 255) ] = 255
 
-            if (mask[k,i] == 255 and img[k,i] == 0):
-                numWhite += 1
+    unique, counts = numpy.unique(white, return_counts=True)
+    res = dict(zip(unique, counts))
 
-            if (mask[k,i] == 255):
-                numOutside -= 1
+    numWhite = res.get(255)
 
+    unique, counts = numpy.unique(count, return_counts=True)
+    res = dict(zip(unique, counts))
 
+    numInFrame = res.get(255)
+
+    numOutside -= numInFrame
 
     if (numOutside / float(numTotal)*100) > 40:
         print("too much outside of img: ", (numOutside / float(numTotal)*100))
@@ -148,12 +166,25 @@ if __name__ == '__main__':
 
     # imageList = os.listdir("./images/")
 
-    circleCount("citrus1")
-    # circleCount("citrus2")
-    # circleCount("citrus3")
-    # circleCount("citrus4")
-    # circleCount("citrus5")
-    # circleCount("citrus6")
+    imageList = [
+        "citrus1",
+        "citrus2",
+        "citrus3",
+        "citrus4",
+        "citrus5",
+        "citrus6",
+        "citrus7",
+        "citrus8",
+        "orange1"]
+    cpu_count = multiprocessing.cpu_count()
+    res = Parallel(n_jobs=cpu_count)(delayed(circleCount)(k) for k in imageList)
+
+    #circleCount("citrus1")
+    #circleCount("citrus2")
+    #circleCount("citrus3")
+    #circleCount("citrus4")
+    #circleCount("citrus5")
+    #circleCount("citrus6")
     # circleCount("citrus7")
     # circleCount("citrus8")
     # circleCount("orange1")
