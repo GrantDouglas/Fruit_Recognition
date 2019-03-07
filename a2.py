@@ -75,19 +75,6 @@ def varianceFilter(fname):
     g[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     r[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
 
-   # gray_threshold
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-
-    #         if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 255:
-    #             mask[k, i] = 0
-    #             b[k, i] = 0
-    #             g[k, i] = 0
-    #             r[k, i] = 0
-
-
-
-
 
     if not os.path.exists('results'):
         os.makedirs('results')

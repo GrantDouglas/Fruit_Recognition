@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 
 ##
@@ -11,6 +11,14 @@
 import os
 import cv2
 import numpy as np
+
+
+BLUE = (255, 0, 0)
+GREEN = (0, 255, 0)
+ORANGE = (66, 134, 244)
+PURPLE = (226, 66, 244)
+RED = (0, 0, 255)
+PINK= (255, 255, 0)
 
 
 
@@ -33,6 +41,9 @@ def circleCount(fname):
     averageR = 0
     for i in circles[0,:]:
 
+        if num == 12:
+            cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
+
 
         if  (averageR == 0) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
 
@@ -51,31 +62,38 @@ def circleCount(fname):
                     averageR = (averageR + i[2]) / 2.0
 
                 # draw the outer circle
-                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),10)
-                cv2.circle(color,(i[0],i[1]),i[2],(0,255,0),10)
+                cv2.circle(cimg,(i[0],i[1]),i[2],GREEN,10)
+                cv2.circle(color,(i[0],i[1]),i[2],GREEN,10)
                 # draw the center of the circle
-                cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
+                cv2.circle(color,(i[0],i[1]),2,BLUE,5)
 
             elif ratio >= 30:
 
                 print(ratio)
-                if i[2] <= averageR*1.2 and  i[2] >= averageR*0.2:
+                if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
 
-                    cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
-                    cv2.circle(color,(i[0],i[1]),i[2],(66, 134, 244),10)
+                    cv2.circle(cimg,(i[0],i[1]),i[2],ORANGE,10)
+                    cv2.circle(color,(i[0],i[1]),i[2],ORANGE,10)
                     # draw the center of the circle
-                    cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
+                    cv2.circle(color,(i[0],i[1]),2,BLUE,5)
 
-                else:
-                    cv2.circle(cimg,(i[0],i[1]),i[2],(0, 8, 255),10)
+                elif i[2] <= averageR*1.4:
+                    cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
             else:
 
                 print(ratio)
-                cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
+
+
+
+                if i[2] <= averageR*1.3:
+                    cv2.circle(cimg,(i[0],i[1]),i[2],PURPLE,10)
 
             # write the circle number
-            cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
+            cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,BLUE,2,cv2.LINE_AA)
 
+        else:
+            if i[2] <= averageR*1.8 and  i[2] >= averageR*0.2:
+                cv2.circle(cimg,(i[0],i[1]),i[2],PINK,10)
         num +=1
 
 
