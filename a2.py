@@ -46,7 +46,7 @@ def varianceFilter(fname):
 
     # test, mean = cv2.threshold(imgGray, 89, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    mean = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, -5)
+    mean = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 3, -5)
 
 
     edges = cv2.Canny(imgGray, 100, 200)
