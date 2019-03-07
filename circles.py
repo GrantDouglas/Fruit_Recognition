@@ -16,19 +16,13 @@ import numpy as np
 
 def circleCount(fname):
 
-	img = cv2.imread("masks/" + fname,0)
-	color = cv2.imread("images/citrus1.jpg",1)
-
-	#kernel = np.ones((10,10),np.uint8)
-
-	#img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
-	#cv2.imwrite("open.png", img)
-
+	img = cv2.imread("masks/" + fname + "_mask.jpg",0)
+	color = cv2.imread("images/" + fname + ".jpg",1)
 
 	img = cv2.medianBlur(img,5)
 	cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-	circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2,200,
+	circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2,150,
 	                            param1=100,param2=100, minRadius=0,maxRadius=3000)
 
 	circles = np.uint16(np.around(circles))
@@ -44,7 +38,6 @@ def circleCount(fname):
 
 			mask = np.zeros(shape=(img.shape[0], img.shape[1]))
 			cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
-			cv2.imwrite("mask.png", mask)
 			vals = countWhite(mask, img, (i[0],i[1]),i[2], num)
 
 			ratio = int(vals[1] / float(vals[0])*100)
@@ -83,13 +76,19 @@ def circleCount(fname):
 			# write the circle number
 			cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
 
-
 		num +=1
 
 
 	print(count)
-	cv2.imwrite("final.png", cimg)
-	cv2.imwrite("out.png", color)
+
+	if not os.path.exists('circle_stage1'):
+		os.makedirs('circle_stage1')
+
+	if not os.path.exists('final'):
+		os.makedirs('final')
+
+	cv2.imwrite("circle_stage1/" +  fname + "_circles.png", cimg)
+	cv2.imwrite("final/" +  fname + "_circles.png", color)
 
 
 def countWhite(mask, img, center, radius, index):
@@ -130,6 +129,12 @@ if __name__ == '__main__':
 
     # imageList = os.listdir("./images/")
 
-    imageList = "citrus1_mask.jpg"
-
-    circleCount(imageList)
+	circleCount("citrus1")
+	circleCount("citrus2")
+	circleCount("citrus3")
+	circleCount("citrus4")
+	circleCount("citrus5")
+	circleCount("citrus6")
+	circleCount("citrus7")
+	circleCount("citrus8")
+	circleCount("orange1")
