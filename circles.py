@@ -265,12 +265,12 @@ if __name__ == '__main__':
 
 
 
-    #circleCount("citrus1")
+    circleCount("citrus1")
     circleCount("citrus2")
-    #circleCount("citrus3")
-    #circleCount("citrus4")
-    #circleCount("citrus5")
-    #circleCount("citrus6")
-    #circleCount("citrus7")
-    #circleCount("citrus8")
-    #circleCount("orange1")
+    circleCount("citrus3")
+    circleCount("citrus4")
+    circleCount("citrus5")
+    circleCount("citrus6")
+    circleCount("citrus7")
+    circleCount("citrus8")
+    circleCount("orange1")
