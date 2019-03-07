@@ -30,7 +30,7 @@ def circleCount(fname):
     img = cv2.medianBlur(img,5)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2,150,
+    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,3,150,
                                 param1=100,param2=100, minRadius=0,maxRadius=3000)
 
     circles = np.uint16(np.around(circles))
@@ -41,7 +41,7 @@ def circleCount(fname):
     averageR = 0
     for i in circles[0,:]:
 
-        if num == 12:
+        if num == 22:
             cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
 
 
@@ -94,6 +94,7 @@ def circleCount(fname):
         else:
             if i[2] <= averageR*1.8 and  i[2] >= averageR*0.2:
                 cv2.circle(cimg,(i[0],i[1]),i[2],PINK,10)
+            cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,BLUE,2,cv2.LINE_AA)
         num +=1
 
 
