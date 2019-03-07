@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 
 ##
@@ -11,6 +11,17 @@
 import os
 import cv2
 import numpy as np
+from joblib import Parallel, delayed
+import multiprocessing
+
+
+BLUE = (255, 0, 0)
+GREEN = (0, 255, 0)
+ORANGE = (66, 134, 244)
+PURPLE = (226, 66, 244)
+RED = (0, 0, 255)
+CYAN= (255, 255, 0)
+MAROON = (76, 19, 76)
 
 
 
@@ -32,16 +43,29 @@ def circleCount(fname):
     num = 0
     averageR = 0
     for i in circles[0,:]:
-        cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0, 0, 255),2,cv2.LINE_AA)
+
+        if (i[2] > img.shape[0] / 4 or i[2] > img.shape[1] / 4):
+            print("r is > 1/4 of size")
+            continue
+
+        mask = np.zeros(shape=(img.shape[0], img.shape[1]))
+        cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
+        ratio = countWhite(mask, img, (i[0],i[1]),i[2], num)
+
+
+        if ratio < 20:
+            continue
+
+        print(num, " ", ratio)
+        # write the circle number
+
+
+        #if num == 22:
+        #    cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
 
 
         if  (averageR == 0) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
 
-            mask = np.zeros(shape=(img.shape[0], img.shape[1]))
-            cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
-            vals = countWhite(mask, img, (i[0],i[1]),i[2], num)
-
-            ratio = int(vals[1] / float(vals[0])*100)
 
             if ratio >= 50:
                 count += 1
@@ -52,31 +76,42 @@ def circleCount(fname):
                     averageR = (averageR + i[2]) / 2.0
 
                 # draw the outer circle
-                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),10)
-                cv2.circle(color,(i[0],i[1]),i[2],(0,255,0),10)
+                cv2.circle(cimg,(i[0],i[1]),i[2],GREEN,10)
+                cv2.circle(color,(i[0],i[1]),i[2],GREEN,10)
                 # draw the center of the circle
-                cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
+                cv2.circle(color,(i[0],i[1]),2,BLUE,5)
 
             elif ratio >= 30:
 
                 print(ratio)
                 if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
 
-                    cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
-                    cv2.circle(color,(i[0],i[1]),i[2],(66, 134, 244),10)
+                    cv2.circle(cimg,(i[0],i[1]),i[2],ORANGE,10)
+                    cv2.circle(color,(i[0],i[1]),i[2],ORANGE,10)
                     # draw the center of the circle
-                    cv2.circle(color,(i[0],i[1]),2,(0,0,255),5)
+                    cv2.circle(color,(i[0],i[1]),2,BLUE,5)
+
+                elif i[2] <= averageR*1.4:
+                    cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)            # slightly larger or too small
+                    cv2.circle(color,(i[0],i[1]),i[2],RED,10)
 
                 else:
-                    cv2.circle(cimg,(i[0],i[1]),i[2],(0, 8, 255),10)
+                    cv2.circle(cimg,(i[0],i[1]),i[2],PURPLE,10)         # too large, (altho could still be valid)
+                    cv2.circle(color,(i[0],i[1]),i[2],PURPLE,10)
+
             else:
 
-                print(ratio)
-                cv2.circle(cimg,(i[0],i[1]),i[2],(226, 66, 244),10)
+                # not filled enough but close in size
+                if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
+                    cv2.circle(color,(i[0],i[1]),i[2],MAROON,10)
+                    cv2.circle(cimg,(i[0],i[1]),i[2],MAROON,10)
 
-            # write the circle number
-            cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0,0,255),2,cv2.LINE_AA)
+            cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,BLUE,2,cv2.LINE_AA)
+        else:
 
+            if ratio > 40:
+                cv2.circle(cimg,(i[0],i[1]),i[2],CYAN,10)
+                cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,BLUE,2,cv2.LINE_AA)
         num +=1
 
 
@@ -92,29 +127,33 @@ def circleCount(fname):
     cv2.imwrite("final/" +  fname + "_circles.png", color)
 
 
+##
+## This will return a the percentage of the black pixles in the circle * 100
+## If the circle goes off the edge of the page and < 40% is outside the page then
+## those pixels will be counted as if they are filled in
 def countWhite(mask, img, center, radius, index):
 
     numTotal = int(3.14 * radius**2)
     numWhite = 0
     numOutside = numTotal
 
+    white = np.zeros(shape=(img.shape[0], img.shape[1]))
+    count = np.zeros(shape=(img.shape[0], img.shape[1]))
 
-    lowerbound_out = max(int(center[1]) - radius, 0)
-    upperbound_out = min(center[1] + radius, img.shape[0])
+    white[(mask == 255) & (img == 0)] = 255
+    count[(mask == 255) ] = 255
 
-    lowerbound_in = max(int(center[0]) - radius, 0)
-    upperbound_in = min(center[0] + radius, img.shape[1])
+    unique, counts = np.unique(white, return_counts=True)
+    res = dict(zip(unique, counts))
 
-    for k in range(lowerbound_out, upperbound_out):
-        for i in range(lowerbound_in, upperbound_in):
+    numWhite = res.get(255)
 
-            if (mask[k,i] == 255 and img[k,i] == 0):
-                numWhite += 1
+    unique, counts = np.unique(count, return_counts=True)
+    res = dict(zip(unique, counts))
 
-            if (mask[k,i] == 255):
-                numOutside -= 1
+    numInFrame = res.get(255)
 
-
+    numOutside -= numInFrame
 
     if (numOutside / float(numTotal)*100) > 40:
         print("too much outside of img: ", (numOutside / float(numTotal)*100))
@@ -122,20 +161,45 @@ def countWhite(mask, img, center, radius, index):
     else:
         numWhite += numOutside
 
-    print("index:", index, numTotal, numWhite)
+    #print("index:", index, numTotal, numWhite)
 
-    return (numTotal, numWhite)
+
+    ratio1 = int(numWhite / float(numTotal)*100)
+    ratio2 = int(numWhite / float(numInFrame)*100)
+
+
+    if ratio2 < ratio1:
+        print("too much white in frame")
+
+    return min(ratio1, ratio2)
+
+
+
+
 
 if __name__ == '__main__':
 
     # imageList = os.listdir("./images/")
 
+    imageList = [
+        "citrus1",
+        "citrus2",
+        "citrus3",
+        "citrus4",
+        "citrus5",
+        "citrus6",
+        "citrus7",
+        "citrus8",
+        "orange1"]
+    #cpu_count = multiprocessing.cpu_count()
+    #res = Parallel(n_jobs=cpu_count)(delayed(circleCount)(k) for k in imageList)
+
     circleCount("citrus1")
     circleCount("citrus2")
-    circleCount("citrus3")
-    circleCount("citrus4")
-    circleCount("citrus5")
-    circleCount("citrus6")
-    circleCount("citrus7")
-    circleCount("citrus8")
-    circleCount("orange1")
+    #circleCount("citrus3")
+    #circleCount("citrus4")
+    #circleCount("citrus5")
+    #circleCount("citrus6")
+    #circleCount("citrus7")
+    #circleCount("citrus8")
+    #circleCount("orange1")
