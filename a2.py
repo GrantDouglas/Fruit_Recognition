@@ -44,7 +44,9 @@ def varianceFilter(fname):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
-    test, mean = cv2.threshold(imgGray, 89, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    # test, mean = cv2.threshold(imgGray, 89, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+    mean = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 3, -5)
 
 
     edges = cv2.Canny(imgGray, 100, 200)
@@ -63,18 +65,40 @@ def varianceFilter(fname):
     cr[cr == 1] = 255
     cr[cr == 254] = 0
 
-    cb[(cb > 120) | (cb < 30)] = 0
-    cb[(cb >= 30) & (cb <= 120)] = 255
+    cb[(cb > 120) | (cb < 30)] = 255
+    cb[(cb >= 30) & (cb <= 120)] = 0
 
 
-    mask = np.full((img.shape[0], img.shape[1]), 255)
+    # mask = np.full((img.shape[0], img.shape[1]), 255)
 
 
-    mask[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
+    # mask[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     b[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     g[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     r[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
 
+<<<<<<< HEAD
+=======
+    print(ndi, mean)
+
+    mask = ndi + mean + cr + cb
+
+
+
+   # gray_threshold
+    # for k in range(0, img.shape[0]):
+    #     for i in range(0, img.shape[1]):
+
+    #         if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 255:
+    #             mask[k, i] = 0
+    #             b[k, i] = 0
+    #             g[k, i] = 0
+    #             r[k, i] = 0
+
+
+
+
+>>>>>>> newMask
 
     if not os.path.exists('results'):
         os.makedirs('results')
@@ -95,12 +119,12 @@ def varianceFilter(fname):
     #if not os.path.exists('intermediaries'):
     #    os.makedirs('intermediaries')
 
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_NDI.jpg", ndi)
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mean.jpg", mean)
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cr.jpg", cr)
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cb.jpg", cb)
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mask.jpg", mask)
-    #cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_final.jpg", final)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_NDI.jpg", ndi)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mean.jpg", mean)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cr.jpg", cr)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_cb.jpg", cb)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_mask.jpg", mask)
+    cv2.imwrite("intermediaries/" + os.path.splitext(fname)[0] + "_final.jpg", final)
 
 
 
