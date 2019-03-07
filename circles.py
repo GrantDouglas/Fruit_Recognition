@@ -39,6 +39,15 @@ def circleCount(fname):
     circles = np.uint16(np.around(circles))
 
 
+
+    overLapMask = np.zeros(shape=(img.shape[0], img.shape[1]))
+
+    ## Every time a green circle is found it will be added to this mask
+    ## a circle will only be marked as new if more then 30% is not already part
+    ## of another orange
+    ##
+
+
     count = 0
     num = 0
     averageR = 0
@@ -59,6 +68,10 @@ def circleCount(fname):
         print(num, " ", ratio)
         # write the circle number
 
+        ratioNotTaken = countNotTaken(overLapMask, mask, img, ratio)
+
+        if (not countNotTaken(overLapMask, mask, img, ratio)):
+            continue
 
         #if num == 22:
         #    cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
@@ -74,6 +87,8 @@ def circleCount(fname):
                     averageR = i[2]
                 else:
                     averageR = (averageR + i[2]) / 2.0
+
+                addOrangeToFoundMask(overLapMask, mask)
 
                 # draw the outer circle
                 cv2.circle(cimg,(i[0],i[1]),i[2],GREEN,10)
@@ -175,6 +190,59 @@ def countWhite(mask, img, center, radius, index):
 
 
 
+def countNotTaken(foundMask, orangeMask, img, percentWhite):
+
+    # if < 50% pixesl are white let it pass
+    if percentWhite < 50:
+        return True
+
+    ## found mask will be white where oranges are, black elsewhere
+    ## so combile where found = black and orangeMask = white to find area not
+    ## already taken by another orange
+
+    orangeNotTaken = np.zeros(shape=(img.shape[0], img.shape[1]))
+    orangeNotTaken[(foundMask == 0) & (orangeMask == 255)] = 255
+
+
+    # count area that is not part of another orange
+    unique, counts = np.unique(orangeNotTaken, return_counts=True)
+    res = dict(zip(unique, counts))
+    areaNotTaken = res.get(255)
+
+
+    # get the total area of the orange in the frame
+    unique, counts = np.unique(orangeMask, return_counts=True)
+    res = dict(zip(unique, counts))
+    areaNewOrange = res.get(255)
+
+
+    # count area of the circle that is not part of another orange is filled
+    orange = np.zeros(shape=(img.shape[0], img.shape[1]))
+    orange[(orangeNotTaken == 255) & (img == 0)] = 255
+    unique, counts = np.unique(orange, return_counts=True)
+    res = dict(zip(unique, counts))
+    numOrange = res.get(255)
+
+
+
+    # if less then 10% of the orange isnt taken drop it
+    if areaNotTaken == 0 or areaNotTaken is None or areaNewOrange == 0 or areaNewOrange is None or int(areaNotTaken / float(areaNewOrange) * 100) < 10:
+        print("none of the orange is distict")
+        return False
+
+
+    # if less then 10% of the un taken orange isnt filled then drop it
+    if numOrange == 0 or numOrange is None or areaNotTaken == 0 or areaNotTaken is None or int(numOrange / float(areaNotTaken) * 100) < 10:
+        print("Too much of the orange is actually another orange - 0")
+        return False
+
+    return True
+
+
+def addOrangeToFoundMask(foundMask, orangeMask):
+
+    foundMask[(foundMask == 255) | (orangeMask == 255)] = 255
+
 
 
 if __name__ == '__main__':
@@ -194,7 +262,10 @@ if __name__ == '__main__':
     #cpu_count = multiprocessing.cpu_count()
     #res = Parallel(n_jobs=cpu_count)(delayed(circleCount)(k) for k in imageList)
 
-    circleCount("citrus1")
+
+
+
+    #circleCount("citrus1")
     circleCount("citrus2")
     #circleCount("citrus3")
     #circleCount("citrus4")
