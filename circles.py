@@ -19,10 +19,10 @@ def circleCount(fname):
     img = cv2.imread("masks/" + fname + "_mask.jpg",0)
     color = cv2.imread("images/" + fname + ".jpg",1)
 
-    img = cv2.medianBlur(img,5)
+    img = cv2.medianBlur(img,3)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2,150,
+    circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2.5,150,
                                 param1=100,param2=100, minRadius=0,maxRadius=3000)
 
     circles = np.uint16(np.around(circles))
@@ -32,6 +32,7 @@ def circleCount(fname):
     num = 0
     averageR = 0
     for i in circles[0,:]:
+        cv2.putText(cimg,str(num),(i[0],i[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL , 2,(0, 0, 255),2,cv2.LINE_AA)
 
 
         if  (averageR == 0) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
@@ -59,7 +60,7 @@ def circleCount(fname):
             elif ratio >= 30:
 
                 print(ratio)
-                if i[2] <= averageR*1.2 and  i[2] >= averageR*0.2:
+                if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
 
                     cv2.circle(cimg,(i[0],i[1]),i[2],(66, 134, 244),10)
                     cv2.circle(color,(i[0],i[1]),i[2],(66, 134, 244),10)
@@ -130,11 +131,11 @@ if __name__ == '__main__':
     # imageList = os.listdir("./images/")
 
     circleCount("citrus1")
-    # circleCount("citrus2")
-    # circleCount("citrus3")
-    # circleCount("citrus4")
-    # circleCount("citrus5")
-    # circleCount("citrus6")
-    # circleCount("citrus7")
-    # circleCount("citrus8")
-    # circleCount("orange1")
+    circleCount("citrus2")
+    circleCount("citrus3")
+    circleCount("citrus4")
+    circleCount("citrus5")
+    circleCount("citrus6")
+    circleCount("citrus7")
+    circleCount("citrus8")
+    circleCount("orange1")
