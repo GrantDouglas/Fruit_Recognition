@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 
 import cv2
@@ -147,9 +147,9 @@ def NDI(img):
 
 if __name__ == '__main__':
 
-    imageList = os.listdir("./images/")
-    cpu_count = multiprocessing.cpu_count()
-    res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
+    #imageList = os.listdir("./images/")
+    #cpu_count = multiprocessing.cpu_count()
+    #res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
 
 
-    #varianceFilter("citrus4.jpg")
+    varianceFilter("orange3.jpg")

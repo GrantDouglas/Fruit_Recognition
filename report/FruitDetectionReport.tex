@@ -5,6 +5,9 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
+\usepackage{subcaption}
+
+
 \usepackage{textcomp}
 \usepackage{xcolor}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -51,6 +54,7 @@ Counting and identifying the number of ripe fruits is important to automate harv
 
 \section{Algorithms}
 
+based off of this \cite{payne_estimation_2013}
 
 
 
@@ -83,7 +87,7 @@ run a threshold on the Cr values. how the threshold is discusses in sec. \ref{va
 
 run a threshold on the Cb values. how the threshold is discusses in sec. \ref{values}. 
 
-
+\subsubsection{Step 5}
 
 Then do a bit-wise and to create a mask
 
@@ -91,19 +95,67 @@ Then do a bit-wise and to create a mask
 pixel_{final}=pixel_{NDI} \land pixel_{mean} \land pixel_{Cr} \land pixel_{Cb} 
 \end{equation}
 
-\subsubsection{Step 5}
+\subsubsection{Step 6}
 Do a circle count  on the mask image
 
 
-\begin{thebibliography}{00}
-\bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
-\bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
-\bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
-\bibitem{b7} M. Young, The Technical Writer's Handbook. Mill Valley, CA: University Science, 1989.
-\end{thebibliography}
+
+
+\section{Results}
+
+\begin{figure*}
+  \begin{subfigure}{.33\linewidth}
+ 	 \includegraphics[width=\linewidth]{citrus1/citrus1_orig.jpg}\hfill
+	 \caption{Origonal}
+  \end{subfigure}
+  \begin{subfigure}{.33\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_NDI.jpg}\hfill
+   	\caption{Result of step 1}
+  \end{subfigure}
+  \begin{subfigure}{.33\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_mean.jpg}
+  	\caption{Result of step 2}
+  \end{subfigure}\par\medskip
+  
+  \begin{subfigure}{.33\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_cr.jpg}\hfill
+     	\caption{Result of step 3}
+  \end{subfigure}
+  \begin{subfigure}{.33\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_cb.jpg}\hfill
+     	\caption{Result of step 4}
+  \end{subfigure}
+  \begin{subfigure}{.33\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_mask.jpg}
+  	\caption{Result of step 5}
+  \end{subfigure}\par\medskip
+  \begin{subfigure}{.5\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_circles_mask.png}\hfill
+	   	\caption{Result of step 6a}
+  \end{subfigure}
+  \begin{subfigure}{.5\linewidth}
+  	\includegraphics[width=\linewidth]{citrus1/citrus1_circles.png}\hfill
+ 	 \caption{Result of step 6b}
+  \end{subfigure}
+  \caption{An example image going through each step to detect the oranges within the image }
+\end{figure*}
+
+
+\section{Discussion}
+
+\subsection{Limitations}
+
+When we were testing our algorithm we noticed that it worked significantly better on images larger than 1300x1300px. It also does not work on images where the diameter of the oranges is greater than half of the screen size, or if the oranges are very small (less then 150px). We determined that this short coming can be easily overcome by using image resolutions above that size. In the application where this algorithm would be used the image quality would be known and the zoom of the image would be consistent allowing the mentioned shortcomings to be overcame. 
+
+
+
+\bibliographystyle{ieeetr}
+\bibliography{reference}
+
+
+
+
+
 \vspace{12pt}
 
 \end{document}
