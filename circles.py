@@ -70,7 +70,7 @@ def circleCount(fname):
 
         ratioNotTaken = countNotTaken(overLapMask, mask, img, ratio)
 
-        if (not countNotTaken(overLapMask, mask, img, ratio)):
+        if (not ratioNotTaken):
             continue
 
         #if num == 22:
@@ -273,4 +273,4 @@ if __name__ == '__main__':
     #circleCount("citrus6")
     #circleCount("citrus7")
     #circleCount("citrus8")
-    circleCount("orange3")
+    #circleCount("orange3")
