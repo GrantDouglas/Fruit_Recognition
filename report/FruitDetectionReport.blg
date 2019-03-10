@@ -3,44 +3,44 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: FruitDetectionReport.aux
 The style file: ieeetr.bst
 Database file #1: reference.bib
-You've used 1 entry,
+You've used 2 entries,
             1876 wiz_defined-function locations,
-            484 strings with 3708 characters,
-and the built_in function-call counts, 334 in all, are:
-= -- 32
-> -- 14
+            492 strings with 4018 characters,
+and the built_in function-call counts, 642 in all, are:
+= -- 60
+> -- 28
 < -- 0
-+ -- 5
-- -- 4
-* -- 28
-:= -- 56
-add.period$ -- 1
-call.type$ -- 1
-change.case$ -- 1
++ -- 10
+- -- 8
+* -- 55
+:= -- 99
+add.period$ -- 2
+call.type$ -- 2
+change.case$ -- 2
 chr.to.int$ -- 0
-cite$ -- 1
-duplicate$ -- 14
-empty$ -- 26
-format.name$ -- 4
-if$ -- 75
+cite$ -- 2
+duplicate$ -- 31
+empty$ -- 57
+format.name$ -- 8
+if$ -- 149
 int.to.chr$ -- 0
-int.to.str$ -- 1
-missing$ -- 1
-newline$ -- 6
-num.names$ -- 1
-pop$ -- 1
+int.to.str$ -- 2
+missing$ -- 2
+newline$ -- 9
+num.names$ -- 2
+pop$ -- 6
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 12
+skip$ -- 21
 stack$ -- 0
-substring$ -- 24
-swap$ -- 7
+substring$ -- 40
+swap$ -- 12
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 4
-width$ -- 2
-write$ -- 12
+while$ -- 8
+width$ -- 3
+write$ -- 23

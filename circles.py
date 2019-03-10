@@ -11,8 +11,6 @@
 import os
 import cv2
 import numpy as np
-from joblib import Parallel, delayed
-import multiprocessing
 
 
 BLUE = (255, 0, 0)
@@ -268,7 +266,7 @@ if __name__ == '__main__':
     #circleCount("citrus1")
     #circleCount("citrus2")
     #circleCount("citrus3")
-    #circleCount("citrus4")
+    circleCount("citrus4")
     #circleCount("citrus5")
     #circleCount("citrus6")
     #circleCount("citrus7")

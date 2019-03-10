@@ -23,34 +23,10 @@ def varianceFilter(fname):
 
     ndi = NDI(img)
 
-    # r_var = ndimage.generic_filter(r, np.var, size=3)
-    # g_var = ndimage.generic_filter(g, np.var, size=3)
-    # b_var = ndimage.generic_filter(b, np.var, size=3)
-
-    # mean = np.zeros(shape=(img.shape[0], img.shape[1]))
-
-    # mean[(r_var + g_var + b_var) > 270] = 255
-
-    # gray_threshold
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-    #         mean_val = int(r_var[k, i]) + int(g_var[k, i]) + int(b_var[k, i])
-    #         if mean_val <= 270:
-    #             mean[k, i] = 0
-    #         else:
-    #             mean[k, i] = 255
-
-
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-
-    # test, mean = cv2.threshold(imgGray, 89, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-
     mean = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 3, -5)
 
-
     edges = cv2.Canny(imgGray, 100, 200)
-
     cv2.imwrite("edges.jpg", edges)
 
 
@@ -68,10 +44,6 @@ def varianceFilter(fname):
     cb[(cb > 120) | (cb < 30)] = 255
     cb[(cb >= 30) & (cb <= 120)] = 0
 
-
-    # mask = np.full((img.shape[0], img.shape[1]), 255)
-
-
     # mask[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     b[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     g[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
@@ -80,22 +52,6 @@ def varianceFilter(fname):
     print(ndi, mean)
 
     mask = ndi + mean + cr + cb
-
-
-
-   # gray_threshold
-    # for k in range(0, img.shape[0]):
-    #     for i in range(0, img.shape[1]):
-
-    #         if ndi[k, i] == 0 and mean[k, i] == 0 and cr[k, i] == 0 and cb[k, i] == 255:
-    #             mask[k, i] = 0
-    #             b[k, i] = 0
-    #             g[k, i] = 0
-    #             r[k, i] = 0
-
-
-
-
 
     if not os.path.exists('results'):
         os.makedirs('results')
