@@ -129,11 +129,11 @@ The third task is to filter some of the circles that were generated in step 2. D
     averageR = 0
     
     \For{circle $\in$ circles}{
-     ratio = countWhitePixels(img, circle) \label{alg:CountCircle:line_1}
+     ratio = OrangePixelCount(img, circle) \label{alg:CountCircle:line_1}
      
-     notTakenRatio = countNotTaken(found, circle)  \label{alg:CountCircle:line_2}
+     enoughShowing = CheckOverlap(found, circle)  \label{alg:CountCircle:line_2}
      
-    \uIf{$circle.radius > img.size/4 \lor ratio <  20$}
+    \uIf{$circle.radius > img.size/4 \lor ratio <  20 \lor \neg enoughShowing$}
       {
         continue
       }
@@ -290,14 +290,14 @@ When we were testing our algorithm we noticed that it worked significantly bette
     \SetKwInOut{Input}{Input}
     \SetKwInOut{Output}{Output}
 
-    \underline{function CheckOverlap} $(foundMask, circle, img, whitePixels)$\;
+    \underline{function CheckOverlap} $(foundMask, circle, img, orangePixels)$\;
     \Input{mask where the taken regions are set to 1 and untaken set to  0 $foundMask$}
     \Input{the circle that is being checked $circle$}
     \Input{the binarized image of oranges $img$}
     \Input{percentage of pixels that are orange}
     \Output{$if the circle should be ignored$}
     
-    \uIf{$whitePixels \leq 50$}
+    \uIf{$orangePixels \leq 50$}
     {
     	return True
     }
@@ -350,10 +350,10 @@ When we were testing our algorithm we noticed that it worked significantly bette
     \SetKwInOut{Input}{Input}
     \SetKwInOut{Output}{Output}
 
-    \underline{function OrangeCount} $(circle, img,)$\;
+    \underline{function OrangePixelCount} $(circle, img)$\;
     \Input{the circle that is being checked $circle$}
     \Input{the binarized image of oranges $img$}
-    \Output{percentage of pixels that are white $whitePixels$}
+    \Output{percentage of pixels that are orange}
     
         
     circleMask = fillMask(img.size, circle)
