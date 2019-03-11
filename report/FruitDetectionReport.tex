@@ -284,14 +284,7 @@ In figure \ref{fig:stages} it shows the generated output for each of the stages 
 
 \subsection{Limitations} \label{sec:limitations}
 
-When we were testing our algorithm we noticed that it worked significantly better on images larger than 1300x1300px. It also does not work on images where the diameter of the oranges is greater than half of the screen size, or if the oranges are very small (less then 150px) This is a direct result of the value that was chosen for the minimum distance between circles in algorithm \ref{circleCountAlg}. We determined that this short coming can be easily overcome by using image resolutions above that size. In the application where this algorithm would be used the image quality would be known and the zoom of the image would be consistent allowing the mentioned shortcomings to be overcame. 
-
-
-
-\section{Psudo code}
-
-\subsection{Circle Filtering}
-
+When we were testing our algorithm we noticed that it worked significantly better on images larger than 1300x1300px. It also does not work on images where the diameter of the oranges is greater than half of the screen size, or if the oranges are very small (less then 150px). This is a direct result of the value that was chosen for the minimum distance between circles in algorithm \ref{circleCountAlg}. We determined that this short coming can be easily overcome by using image resolutions above that size. In the application where this algorithm would be used the image quality would be known and the zoom of the image would be consistent, allowing the mentioned shortcomings to be overcome. 
 
 \begin{algorithm} 
     \SetKwInOut{Input}{Input}
