@@ -83,7 +83,7 @@ def varianceFilter(fname):
     cv2.imwrite("intermediaries/" + fname + "_final.jpg", final)
 
 
-    counts = circleCount(img, mask, fname)
+    counts = circleCount(img, fname)
 
     print("Green: " + str(counts[0]))
     print("Orange: " + str(counts[1]))
@@ -112,8 +112,9 @@ def NDI(img):
 
 
 
-def circleCount(color, img, fname):
+def circleCount(color, fname):
 
+    img = cv2.imread("masks/" + fname + "_mask.jpg",0)
     img = cv2.medianBlur(img,3)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
@@ -145,26 +146,19 @@ def circleCount(color, img, fname):
 
         mask = np.zeros(shape=(img.shape[0], img.shape[1]))
         cv2.circle(mask,(i[0],i[1]),i[2],255, -1)
-        ratio = countWhite(mask, img, (i[0],i[1]),i[2], num)
+        ratio = countWhite(mask, img, (i[0],i[1]),i[2])
 
 
         if ratio < 20:
             continue
 
         # write the circle number
-
         ratioNotTaken = countNotTaken(overLapMask, mask, img, ratio)
 
         if (not ratioNotTaken):
             continue
 
-        #if num == 22:
-        #    cv2.circle(cimg,(i[0],i[1]),i[2],RED,10)
-
-
         if  (averageR == 0) or (averageR != 0 and i[2] <= averageR*1.5 and  i[2] >= averageR*0.5):
-
-
             if ratio >= 50:
                 countGreen += 1
 
@@ -183,7 +177,6 @@ def circleCount(color, img, fname):
 
             elif ratio >= 30:
 
-                print(ratio)
                 if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
 
                     countOrange += 1
@@ -204,7 +197,6 @@ def circleCount(color, img, fname):
                     cv2.circle(color,(i[0],i[1]),i[2],PURPLE,10)
 
             else:
-
                 # not filled enough but close in size
                 if i[2] <= averageR*1.2 and  i[2] >= averageR*0.8:
                     cv2.circle(color,(i[0],i[1]),i[2],MAROON,10)
@@ -324,9 +316,9 @@ def addOrangeToFoundMask(foundMask, orangeMask):
 
 if __name__ == '__main__':
 
-    #imageList = os.listdir("./images/")
-    #cpu_count = multiprocessing.cpu_count()
-    #res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
+    imageList = os.listdir("./images/")
+    cpu_count = multiprocessing.cpu_count()
+    res = Parallel(n_jobs=cpu_count)(delayed(varianceFilter)(k) for k in imageList)
 
 
-    varianceFilter("orange3.jpg")
+    #varianceFilter("orange3.jpg")
