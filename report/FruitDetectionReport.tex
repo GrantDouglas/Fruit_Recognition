@@ -88,17 +88,30 @@ With all of the masks created, they are then combined together to form a final m
 pixel_{final}=pixel_{NDI} \land pixel_{mean} \land pixel_{Cr} \land pixel_{Cb} 
 \end{equation}
 
-\subsubsection{Step 6}
-The final step is to count the crop yield on the tree.  This process is described in more detail in the following section.
-
-
 \subsection{Orange Counting} 
 
 In the second phase, the mask that was generated previously will be used to count the number of circles, each circle representing an orange fruit. Pseudo code for this is shown below in Algorithms \ref{circleCountAlg}, \ref{overlapComp}, and \ref{OrangeCountAlg}. 
 
-
 \subsubsection{Step 1}
-The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the edge detection algorithm.  Since the Hough transformation will generate more circles then there actually are oranges, we filtered the number of circles down based on calculating a rolling average of the radius, how many pixels are within the circle, how much of the detected circle is within the frame and how much overlap there is. This is shown below in algorithm \ref{circleCountAlg} and discussed below.
+The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the canny edge detection algorithm. 
+
+
+\subsubsection{Step 2} 
+The second step is to run a Hough transformation to identify circular regions within the image.
+
+The values that were selected for the Hough transform were chosen as; $dp = 2.5$, $minDist = 150px$, $thresholds = 100$, $minimum radius = 0$, and  $maximum radius = 3000$. The $dp$ is an inverse ratio used in the accumulator which is used to detect circles, we chose this value based on running the algorithm with multiple images and this yielded the best result. The value of 150px was chosen to be the minimum distance because most of the images were large enough that this value did not cause a significant number of the oranges to be missed. This is discussed in more detail in section \ref{sec:limitations}. The 2 Hough transform parameters that are used for Canny Edge detection were set to 100, an arbitrary value between 0 and 255, since the base image that was being used had been previously binarized to contain only values of 0 and 255 (not including the Gaussian blur on the edges). \cite{yadav_approach_2014}.
+
+
+\subsubsection{Step 3}
+The third task is to filter some of the circles that were generated in step 2. Due to the parameters that we chose to use for the Hough transformation, more circles are generated than there are oranges. Filtering was done based on 3 primary methods:
+
+\begin{itemize}
+\item Rolling average of the radius
+\item Percent of the pixels within the circle that have been identified as being orange based on the mask from phase 1
+\item Percent of the circle that is within the frame of the image
+\item Percent of the circle that is not occluded by other detected oranges
+\end{itemize}
+
 
 
 \begin{algorithm} 
@@ -165,10 +178,8 @@ The first step in the process is to apply a Gaussian blur to the mask to soften 
 \end{algorithm}
 
 
-The values that were selected for the Hough transform were chosen as; $dp = 2.5$, $minDist = 150px$, $thresholds = 100$, $minimum radius = 0$, and  $maximum radius = 3000$. The $dp$ is an inverse ratio used in the accumulator which is used to detect circles, we chose this value based on running the algorithm with multiple images and this yielded the best result. The value of 150px was chosen to be the minimum distance because most of the images were large enough that this value did not cause a significant number of the oranges to be missed. This is discussed in more detail in section \ref{sec:limitations}. The 2 Hough transform parameters that are used for Canny Edge detection were set to 100, an arbetrary value between 0 and 255, since the base image that was being used had been previously binarized to contain only values of 0 and 255 (not including the Gaussian blur on the edges). \cite{yadav_approach_2014}.
 
-
-On line \ref{alg:CountCircle:line_1} in algorithm \ref{circleCountAlg}, the percentage of pixels in the image that have been identified as part of the orange is taken to the number of pixels within the circle that are not part of the orange. Details of this are shown in algorithm \ref{OrangeCountAlg}. The White count algorithm takes into account part of the detected circle that is outside of the frame of the image, if less than 40\% if the circle is outside the frame then that portion that is outside is assumed to be filled, if more then 40\% is outside then it is assumed to not be filled. 
+On line \ref{alg:CountCircle:line_1} in algorithm \ref{circleCountAlg}, the percentage of pixels in the image that have been identified as part of the orange is taken to the xL of pixels within the circle that are not part of the orange. Details of this are shown in algorithm \ref{OrangeCountAlg}. The White count algorithm takes into account part of the detected circle that is outside of the frame of the image, if less than 40\% if the circle is outside the frame then that portion that is outside is assumed to be filled, if more then 40\% is outside then it is assumed to not be filled. 
 
 
 On line \ref{alg:CountCircle:line_2} of algorithm \ref{circleCountAlg}, the percentage of pixels that are not already taken is counted as part of another orange. This reduces the number of overlapping circles that are detected. This can be seen in figure \ref{overlapComp} where the image on the right does not filter the circles by how much they overlap and the one one on the right does. Details of this are shown in algorithm \ref{CheckOverlapAlg}
