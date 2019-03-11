@@ -38,9 +38,7 @@ gdouglas@uoguelph.ca}
 \maketitle
 
 \begin{abstract}
-This document is a model and instructions for \LaTeX.
-This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes, 
-or Math in Paper Title or Abstract.
+This paper investigates the effectiveness of a machine vision algorithm to identify and count oranges. This was done by using a multi phase process to first generate a mask of all the orange content and then to detect circular shapes within the mask, and finally to filter and count the circles. The algorithm had around a 73\% success rate at identifying oranges.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -49,20 +47,22 @@ Image Processing, Fruit, Applied image colour segmentation, Automated counting
 
 \section{Introduction}
 
-Counting and identifying the number of ripe fruits is important to automate harvesting fruits when they are ripe and to identify how many ripe fruits there are on a tree.
+
+Crop yield estimation is important to farmers so that they can accurately predict and manage the resources that will be required to harvest the crop, and to tell when to best pick the crop. An automated image processing technique will allow farmers to reduce the amount of manual labor that is required, and increase the accuracy of the estimated count of ripe fruits. This paper aims to modify and test a method developed by Payne, Walsh, Subedi and Jarvis to identify ripe Mangos, to identify oranges \cite{payne_estimation_2013}.
+
 
 \section{Algorithms}
 
-The algorithm that was developed is a variant of the one proposed by Payne for mango crop detection  \cite{payne_estimation_2013}. The algorithm consists of six steps, five of which apply masks to the image, and the sixth counts the total crop yield. The image is analyzed for orange coloured regions within the RGB and YCbCr colour spaces to create colour masks. This is then combined afterwards to produce a single orange level mask. Finally, circular regions are counted to determine how many oranges are seen within the image.
+The orange identification has been split into a 2 phase process, the first is used to isolate the parts of the image that belong to oranges, and the second phase to count the number of blobs that were generated in phase one into individual oranges.
 
+\subsection{Orange Isolation}
 
-\subsection{Values} \label{values}
-
+The first phase of the process is outlined in figure \ref{fig:algoOverview}. The algorithm that was developed is a variant of the one proposed by Payne for mango crop detection  \cite{payne_estimation_2013}. The algorithm consists of five steps, which apply masks to the image. The image is analyzed for orange coloured regions within the RGB and YCbCr colour spaces to create colour masks. This is then combined afterwards to produce a single orange level mask.  This mask is then passed on to the second phase and the circular regions are counted to determine how many oranges are seen within the image.
 
 \begin{figure}[H]
 \centerline{\includegraphics[width=0.5\textwidth]{algo_stages}}
-\caption{Outline of the proccess of the stages of the algorithm}
-\label{fig}
+\caption{Outline of the process of the stages of the algorithm}
+\label{fig:algoOverview}
 \end{figure}
 
 \subsection{Stages}
@@ -71,14 +71,14 @@ The algorithm that was developed is a variant of the one proposed by Payne for m
 The first step in this algorithm is to produce a normalised index between the red and green channels. The index is calculated such that $NDI = (g - r) / (g + r)$ for each pixel in both channels. The values are then thresholded where $NDI > 0$. This step helps provide emphasis on regions with higher redness levels, and less emphasis on foliage.
 
 \subsubsection{Step 2}
-In Payne’s algorithm, a $3x3$ variance filter is used for each colour channel, then combined and converted to grayscale, and finally thresholded to meet a desired property. This process provided to be insufficient for oranges, and instead a $3x3$ adaptive mean threshold filter was used. This new filter was able to remove excess foliage from the image, as well as remove areas that are irrelevant to the oranges, such as the sky.
+In Payne’s algorithm, a $3x3$ variance filter is used for each colour channel, then combined and converted to grayscale, and finally thresholded to meet a desired property. This process proved to be insufficient for oranges, and instead a $3x3$ adaptive mean threshold filter was used. This new filter was able to remove excess foliage from the image, as well as remove areas that are irrelevant to the oranges, such as the sky.
 
 \subsubsection{Step 3}
-The image is then converted into YCbCr colour space, and Cr and Cb channels extracted to threshold from. The Cr channel measures the red difference within the image, so any component which favours a medium to high red level will work. As such, the threshold value of $pixelvalue >= 140$ is used, as this was seen to be the average minimum Cr value found across multiple images containing oranges.
+The image is then converted into the YCbCr colour space, and Cr and Cb channels extracted to threshold from. The Cr channel measures the red difference within the image, so any component which favours a medium to high red level will work. As such, the threshold value of $pixelvalue >= 140$ was  used, as this was seen to be the average minimum Cr value found across multiple regions within images containing oranges.
 
 \subsubsection{Step 4}
 
-The Cb channel is used to determine the blue difference within the image. This means that a lower to medium value is acceptable for oranges, as this would produce an orange colour when combined with the Cr channel. As such, a threshold condition of $30 <= pixelvalue <= 120$ is used.
+The Cb channel is used to determine the blue difference within the image. This means that a lower to medium value is acceptable for oranges, as this would produce an orange colour when combined with the Cr channel. As such, a threshold condition of $30 <= pixelvalue <= 120$ was used.
 
 \subsubsection{Step 5}
 
@@ -89,12 +89,16 @@ pixel_{final}=pixel_{NDI} \land pixel_{mean} \land pixel_{Cr} \land pixel_{Cb}
 \end{equation}
 
 \subsubsection{Step 6}
-The final step is to count the crop yield on the tree. The process is to first apply a Gaussian blur to the image and perform a Hough transform to detect circles. These circles are then analyzed to determine how much of the region contains the selected pixel value, and is of reasonable size. Once each circle is checked, the final result will be an image with orange regions are circled.
+The final step is to count the crop yield on the tree.  This process is described in more detail in the following section.
 
 
-\subsection{Circle Filtering}
+\subsection{Orange Counting} 
 
-Once the mask is generated after step 5, that mask will be used to count the number of circles, each circle representing an orange fruit. Pseudo code for this is shown below in Algorithms \ref{circleCountAlg}, \ref{overlapComp}, and \ref{OrangeCountAlg}. The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the edge detection algorithm.  Since the Hough transformation will generate more circles then there actually are oranges, we filtered the number of circles down based on calculating a rolling average of the radius, how many pixels are within the circle, how much of the detected circle is within the frame and how much overlap there is. This is shown below in algorithm \ref{circleCountAlg} and discussed below.
+In the second phase, the mask that was generated previously will be used to count the number of circles, each circle representing an orange fruit. Pseudo code for this is shown below in Algorithms \ref{circleCountAlg}, \ref{overlapComp}, and \ref{OrangeCountAlg}. 
+
+
+\subsubsection{Step 1}
+The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the edge detection algorithm.  Since the Hough transformation will generate more circles then there actually are oranges, we filtered the number of circles down based on calculating a rolling average of the radius, how many pixels are within the circle, how much of the detected circle is within the frame and how much overlap there is. This is shown below in algorithm \ref{circleCountAlg} and discussed below.
 
 
 \begin{algorithm} 
@@ -285,7 +289,7 @@ When we were testing our algorithm we noticed that it worked significantly bette
     \Input{mask where the taken regions are set to 1 and untaken set to  0 $foundMask$}
     \Input{the circle that is being checked $circle$}
     \Input{the binarized image of oranges $img$}
-    \Input{percentage of pixels that are white $whitePixels$}
+    \Input{percentage of pixels that are orange}
     \Output{$if the circle should be ignored$}
     
     \uIf{$whitePixels \leq 50$}
@@ -294,12 +298,6 @@ When we were testing our algorithm we noticed that it worked significantly bette
     }
         
     circleMask = fillMask(img.size, circle)
-    
-    areaNotTaken = 0
-    
-    areaNewOrangeInFrame = 0
-    
-    areaFilledNotTaken = 0
     
     \For{$i \in img.height$}
     {
@@ -366,11 +364,11 @@ When we were testing our algorithm we noticed that it worked significantly bette
     {
     	 \For{$j \in img.width$}
 	 {
-	 	numOutOfFrame--
+	 	numOutOfFrame$--$
 		
 	 	\lIf{$img[i,j] \land circleMask$}
 		{
-			numOrange++
+			numOrange$++$
 		}
 	 }
     }
@@ -392,6 +390,8 @@ When we were testing our algorithm we noticed that it worked significantly bette
     \caption{Count the number of pixels that are within the circle that have been marked as orange} \label{OrangeCountAlg}
 \end{algorithm}
 
+
+\section{Conclusion}
 
 
 \bibliographystyle{ieeetr}
