@@ -29,11 +29,13 @@ def varianceFilter(fname):
 
     print(fname)
 
+#     read the image and split the colour channels
     img = cv2.imread("images/" + fname + ".jpg", 1)
     b, g, r = cv2.split(img)
 
     ndi = NDI(img)
 
+#     run the adaptive threshold mean filter on the image
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     mean = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 3, -5)
 
@@ -42,16 +44,17 @@ def varianceFilter(fname):
     ycrcb = cv2.cvtColor(img, 36)
     y, cr, cb = cv2.split(ycrcb)
 
-
+#     Threshold Cr colour channel
     cr[cr >= 140] = 254
     cr[cr < 140] = 1
-
     cr[cr == 1] = 255
     cr[cr == 254] = 0
 
+#     Threshold the cb colour channel
     cb[(cb > 120) | (cb < 30)] = 255
     cb[(cb >= 30) & (cb <= 120)] = 0
 
+#     threshold the b, g, and r channels with the appropriate masking channels
     b[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     g[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
     r[(ndi == 0) & (mean == 0) & (cr == 0) & (cb == 255)] = 0
@@ -71,10 +74,11 @@ def varianceFilter(fname):
 
     cv2.imwrite("results/" + fname + "_fix.jpg", final)
 
-    ## Print all the intermidatrys
+    ## Print all the intermediaries
     if not os.path.exists('intermediaries'):
         os.makedirs('intermediaries')
 
+# Create intermediary files
     cv2.imwrite("intermediaries/" + fname + "_NDI.jpg", ndi)
     cv2.imwrite("intermediaries/" + fname + "_mean.jpg", mean)
     cv2.imwrite("intermediaries/" + fname + "_cr.jpg", cr)
@@ -91,17 +95,22 @@ def varianceFilter(fname):
     print("Purple: " + str(counts[3]))
 
 
+#     Generate the Normalised Difference Index from the reference paper
 def NDI(img):
 
     b, g, r = cv2.split(img)
 
     ndi = np.zeros(shape=(img.shape[0], img.shape[1]))
 
+    
     for k in range(0, img.shape[0]):
         for i in range(0, img.shape[1]):
+            
+#             Calculate the top and bottom values of ratio
             top = int(g[k, i]) - int(r[k, i])
             bot = int(g[k, i]) + int(r[k, i])
-
+        
+#           Check for divide by zero, and threshold
             if bot != 0:
                 val = float(top) / float(bot)
 
@@ -118,6 +127,7 @@ def circleCount(color, fname):
     img = cv2.medianBlur(img,3)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
+#     generate circles from the image with the Hough Transform
     circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,2.5,150,
                                 param1=100,param2=100, minRadius=0,maxRadius=3000)
 
