@@ -88,17 +88,30 @@ With all of the masks created, they are then combined together to form a final m
 pixel_{final}=pixel_{NDI} \land pixel_{mean} \land pixel_{Cr} \land pixel_{Cb} 
 \end{equation}
 
-\subsubsection{Step 6}
-The final step is to count the crop yield on the tree.  This process is described in more detail in the following section.
-
-
 \subsection{Orange Counting} 
 
 In the second phase, the mask that was generated previously will be used to count the number of circles, each circle representing an orange fruit. Pseudo code for this is shown below in Algorithms \ref{circleCountAlg}, \ref{overlapComp}, and \ref{OrangeCountAlg}. 
 
-
 \subsubsection{Step 1}
-The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the edge detection algorithm.  Since the Hough transformation will generate more circles then there actually are oranges, we filtered the number of circles down based on calculating a rolling average of the radius, how many pixels are within the circle, how much of the detected circle is within the frame and how much overlap there is. This is shown below in algorithm \ref{circleCountAlg} and discussed below.
+The first step in the process is to apply a Gaussian blur to the mask to soften the edges for the canny edge detection algorithm. 
+
+
+\subsubsection{Step 2} 
+The second step is to run a Hough transformation to identify circular regions within the image.
+
+The values that were selected for the Hough transform were chosen as; $dp = 2.5$, $minDist = 150px$, $thresholds = 100$, $minimum radius = 0$, and  $maximum radius = 3000$. The $dp$ is an inverse ratio used in the accumulator which is used to detect circles, we chose this value based on running the algorithm with multiple images and this yielded the best result. The value of 150px was chosen to be the minimum distance because most of the images were large enough that this value did not cause a significant number of the oranges to be missed. This is discussed in more detail in section \ref{sec:limitations}. The 2 Hough transform parameters that are used for Canny Edge detection were set to 100, an arbitrary value between 0 and 255, since the base image that was being used had been previously binarized to contain only values of 0 and 255 (not including the Gaussian blur on the edges). \cite{yadav_approach_2014}.
+
+
+\subsubsection{Step 3}
+The third task is to filter some of the circles that were generated in step 2. Due to the parameters that we chose to use for the Hough transformation, more circles are generated than there are oranges. Filtering was done based on 3 primary methods:
+
+\begin{itemize}
+\item Rolling average of the radius
+\item Percent of the pixels within the circle that have been identified as being orange based on the mask from phase 1
+\item Percent of the circle that is within the frame of the image
+\item Percent of the circle that is not occluded by other detected oranges
+\end{itemize}
+
 
 
 \begin{algorithm} 
@@ -116,11 +129,11 @@ The first step in the process is to apply a Gaussian blur to the mask to soften 
     averageR = 0
     
     \For{circle $\in$ circles}{
-     ratio = countWhitePixels(img, circle) \label{alg:CountCircle:line_1}
+     ratio = OrangePixelCount(img, circle) \label{alg:CountCircle:line_1}
      
-     notTakenRatio = countNotTaken(found, circle)  \label{alg:CountCircle:line_2}
+     enoughShowing = CheckOverlap(found, circle)  \label{alg:CountCircle:line_2}
      
-    \uIf{$circle.radius > img.size/4 \lor ratio <  20$}
+    \uIf{$circle.radius > img.size/4 \lor ratio <  20 \lor \neg enoughShowing$}
       {
         continue
       }
@@ -129,46 +142,44 @@ The first step in the process is to apply a Gaussian blur to the mask to soften 
       
       \If{$(averageR = 0) \lor (averageR\cdot0.5 \leq circle.radius \leq averageR\cdot1.5$}
       {
-      	/* very confident this is an orange*/
-	
-          \If{$ratio \geq 50$}	
+        /* very confident this is an orange*/
+  
+          \If{$ratio \geq 50$}  
           {
-          	averageR = (averageR +  circle.radius) / 2
-	
-		markFound(found, circle)
-		
-		markCircle(img, circle, color.GREEN)
-	  }
-	  \ElseIf{$ratio \geq 30$}{
-	  
-	  	 \uIf{$averageR\cdot0.8 \leq circle.radius \leq averageR\cdot1.2$}	
-          	{
-			markCircle(img, circle, color.ORANGE)
-	 	 }
-	  	\uElseIf{$ circle.radius \leq averageR\cdot1.4$}{
-			markCircle(img, circle, color.PURPLE)
-	  	}
-		\uElse{
-			markCircle(img, circle, color.RED)
-		}
-	  }
-	  \Else{
-	  	/* not filled enough, but close size*/
-		
-		\uIf{$averageR\cdot0.8 \leq circle.radius \leq averageR\cdot1.2$} {
-			markCircle(img, circle, color.MAROON)
-		}
-	  }
+            averageR = (averageR +  circle.radius) / 2
+  
+    markFound(found, circle)
+    
+    markCircle(img, circle, color.GREEN)
+    }
+    \ElseIf{$ratio \geq 30$}{
+    
+       \uIf{$averageR\cdot0.8 \leq circle.radius \leq averageR\cdot1.2$}  
+            {
+      markCircle(img, circle, color.ORANGE)
+     }
+      \uElseIf{$ circle.radius \leq averageR\cdot1.4$}{
+      markCircle(img, circle, color.PURPLE)
+      }
+    \uElse{
+      markCircle(img, circle, color.RED)
+    }
+    }
+    \Else{
+      /* not filled enough, but close size*/
+    
+    \uIf{$averageR\cdot0.8 \leq circle.radius \leq averageR\cdot1.2$} {
+      markCircle(img, circle, color.MAROON)
+    }
+    }
       }
     }
     \caption{Orange counting algorithms} \label{circleCountAlg}
 \end{algorithm}
 
 
-The values that were selected for the Hough transform were chosen as; $dp = 2.5$, $minDist = 150px$, $thresholds = 100$, $minimum radius = 0$, and  $maximum radius = 3000$. The $dp$ is an inverse ratio used in the accumulator which is used to detect circles, we chose this value based on running the algorithm with multiple images and this yielded the best result. The value of 150px was chosen to be the minimum distance because most of the images were large enough that this value did not cause a significant number of the oranges to be missed. This is discussed in more detail in section \ref{sec:limitations}. The 2 Hough transform parameters that are used for Canny Edge detection were set to 100, an arbetrary value between 0 and 255, since the base image that was being used had been previously binarized to contain only values of 0 and 255 (not including the Gaussian blur on the edges). \cite{yadav_approach_2014}.
 
-
-On line \ref{alg:CountCircle:line_1} in algorithm \ref{circleCountAlg}, the percentage of pixels in the image that have been identified as part of the orange is taken to the number of pixels within the circle that are not part of the orange. Details of this are shown in algorithm \ref{OrangeCountAlg}. The White count algorithm takes into account part of the detected circle that is outside of the frame of the image, if less than 40\% if the circle is outside the frame then that portion that is outside is assumed to be filled, if more then 40\% is outside then it is assumed to not be filled. 
+On line \ref{alg:CountCircle:line_1} in algorithm \ref{circleCountAlg}, the percentage of pixels in the image that have been identified as part of the orange is taken to the xL of pixels within the circle that are not part of the orange. Details of this are shown in algorithm \ref{OrangeCountAlg}. The White count algorithm takes into account part of the detected circle that is outside of the frame of the image, if less than 40\% if the circle is outside the frame then that portion that is outside is assumed to be filled, if more then 40\% is outside then it is assumed to not be filled. 
 
 
 On line \ref{alg:CountCircle:line_2} of algorithm \ref{circleCountAlg}, the percentage of pixels that are not already taken is counted as part of another orange. This reduces the number of overlapping circles that are detected. This can be seen in figure \ref{overlapComp} where the image on the right does not filter the circles by how much they overlap and the one one on the right does. Details of this are shown in algorithm \ref{CheckOverlapAlg}
@@ -176,12 +187,12 @@ On line \ref{alg:CountCircle:line_2} of algorithm \ref{circleCountAlg}, the perc
 
 \begin{figure}[H]
   \begin{subfigure}{.49\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus2_circles.png}\hfill
-	 \caption{Filtered out overlapping circles}
+   \includegraphics[width=\linewidth]{citrus2_circles.png}\hfill
+   \caption{Filtered out overlapping circles}
   \end{subfigure}
   \begin{subfigure}{.49\linewidth}
-  	\includegraphics[width=\linewidth]{citrus2_circles_withoverlapfilter.png}
-   	\caption{Oranges with overlapping circles}
+    \includegraphics[width=\linewidth]{citrus2_circles_withoverlapfilter.png}
+    \caption{Oranges with overlapping circles}
   \end{subfigure}
   \caption{An example image going through each step to detect the oranges within the image, (Note: only the green, confident detections are shown for the sake of simplicity)} \label{overlapComp}
 \end{figure}
@@ -205,25 +216,25 @@ The algorithm was tested against a set of 8 images, each with varying brightness
 
 \begin{figure}[H]
   \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus1/citrus1_circles.png}\hfill
-	 \caption{Citrus 1} \label{fig:citrus_results_1}
+   \includegraphics[width=\linewidth]{citrus1/citrus1_circles.png}\hfill
+   \caption{Citrus 1} \label{fig:citrus_results_1}
   \end{subfigure}
    \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus3_circles.png}\hfill
-	 \caption{Citrus 3}  \label{fig:citrus_results_3}
+   \includegraphics[width=\linewidth]{citrus3_circles.png}\hfill
+   \caption{Citrus 3}  \label{fig:citrus_results_3}
   \end{subfigure}
    \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus4_circles.png}
-	 \caption{Citrus 4}  \label{fig:citrus_results_4}
+   \includegraphics[width=\linewidth]{citrus4_circles.png}
+   \caption{Citrus 4}  \label{fig:citrus_results_4}
   \end{subfigure}\par\medskip
   
     \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus6_circles.png}\hfill
-	 \caption{Citrus 6}  \label{fig:citrus_results_6}
+   \includegraphics[width=\linewidth]{citrus6_circles.png}\hfill
+   \caption{Citrus 6}  \label{fig:citrus_results_6}
   \end{subfigure}
    \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus8_circles.png}
-	 \caption{Citrus 8}  \label{fig:citrus_results_8}
+   \includegraphics[width=\linewidth]{citrus8_circles.png}
+   \caption{Citrus 8}  \label{fig:citrus_results_8}
   \end{subfigure}
   \caption{The results of the circle counting algorithm} \label{fig:citrus_results}
 \end{figure}
@@ -233,37 +244,37 @@ In figure \ref{fig:stages} it shows the generated output for each of the stages 
 
 \begin{figure}[H]
   \begin{subfigure}{.3\linewidth}
- 	 \includegraphics[width=\linewidth]{citrus1/citrus1_orig.jpg}\hfill
-	 \caption{Origonal}
+   \includegraphics[width=\linewidth]{citrus1/citrus1_orig.jpg}\hfill
+   \caption{Origonal}
   \end{subfigure}
   \begin{subfigure}{.3\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_NDI.jpg}\hfill
-   	\caption{Result of step 1}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_NDI.jpg}\hfill
+    \caption{Result of step 1}
   \end{subfigure}
   \begin{subfigure}{.3\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_mean.jpg}
-  	\caption{Result of step 2}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_mean.jpg}
+    \caption{Result of step 2}
   \end{subfigure}\par\medskip
   
   \begin{subfigure}{.3\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_cr.jpg}\hfill
-     	\caption{Result of step 3}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_cr.jpg}\hfill
+      \caption{Result of step 3}
   \end{subfigure}
   \begin{subfigure}{.3\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_cb.jpg}\hfill
-     	\caption{Result of step 4}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_cb.jpg}\hfill
+      \caption{Result of step 4}
   \end{subfigure}
   \begin{subfigure}{.3\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_mask.jpg}
-  	\caption{Result of step 5}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_mask.jpg}
+    \caption{Result of step 5}
   \end{subfigure}\par\medskip
   \begin{subfigure}{.49\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_circles_mask.png}\hfill
-	   	\caption{Result of step 6a}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_circles_mask.png}\hfill
+      \caption{Result of step 6a}
   \end{subfigure}
   \begin{subfigure}{.49\linewidth}
-  	\includegraphics[width=\linewidth]{citrus1/citrus1_circles.png}\hfill
- 	 \caption{Result of step 6b}
+    \includegraphics[width=\linewidth]{citrus1/citrus1_circles.png}\hfill
+   \caption{Result of step 6b}
   \end{subfigure}
   \caption{An example image going through each step to detect the oranges within the image} \label{fig:stages}
 \end{figure}
@@ -273,66 +284,68 @@ In figure \ref{fig:stages} it shows the generated output for each of the stages 
 
 \subsection{Limitations} \label{sec:limitations}
 
-When we were testing our algorithm we noticed that it worked significantly better on images larger than 1300x1300px. It also does not work on images where the diameter of the oranges is greater than half of the screen size, or if the oranges are very small (less then 150px) This is a direct result of the value that was chosen for the minimum distance between circles in algorithm \ref{circleCountAlg}. We determined that this short coming can be easily overcome by using image resolutions above that size. In the application where this algorithm would be used the image quality would be known and the zoom of the image would be consistent allowing the mentioned shortcomings to be overcame. 
+
+When we were testing our algorithm we noticed that it worked significantly better on images larger than 1300x1300px. It also does not work on images where the diameter of the oranges is greater than half of the screen size, or if the oranges are very small (less then 150px) This is a direct result of the value that was chosen for the minimum distance between circles in algorithm \ref{circleCountAlg}. We determined that this short coming can be easily overcome by using image resolutions above that size. In the application where this algorithm would be used the image quality would be known and the zoom of the image would be consistent allowing the mentioned shortcomings to be overcame.  Luminance levels could have also been examined to help aid in the normalization of the image, since highly illuminated images caused the most troubles for orange detection
+
+This algorithm also has varying levels of performance when being run. Due to the inefficiencies within the circle detection algorithm, it is computationally expensive to produce results. This is made especially apparent when dealing with large images and cluttered images.
 
 
 
-\section{Psudo code}
+\section{Pseudo code}
 
-\subsection{Circle Filtering}
-
+The following 2 algorithms alg. \ref{CheckOverlapAlg} and \ref{OrangeCountAlg}, are included as part of the circle counting procedure. 
 
 \begin{algorithm} 
     \SetKwInOut{Input}{Input}
     \SetKwInOut{Output}{Output}
 
-    \underline{function CheckOverlap} $(foundMask, circle, img, whitePixels)$\;
+    \underline{function CheckOverlap} $(foundMask, circle, img, orangePixels)$\;
     \Input{mask where the taken regions are set to 1 and untaken set to  0 $foundMask$}
     \Input{the circle that is being checked $circle$}
     \Input{the binarized image of oranges $img$}
     \Input{percentage of pixels that are orange}
     \Output{$if the circle should be ignored$}
     
-    \uIf{$whitePixels \leq 50$}
+    \uIf{$orangePixels \leq 50$}
     {
-    	return True
+      return True
     }
         
     circleMask = fillMask(img.size, circle)
     
     \For{$i \in img.height$}
     {
-    	 \For{$j \in img.width$}
-	 {
-	 	\lIf{$\neg foundMask[i,j] \land circleMask$}
-		{
-			areaNotTaken++
-		}
-		
-		\lIf{$circleMask$}
-		{
-			areaNewOrangeInFrame++
-		}
-		
-		\lIf{$\neg foundMask[i,j] \land circleMask \land img[i,j]$}
-		{
-			areaFilledNotTaken++
-		}
-	 }
+       \For{$j \in img.width$}
+   {
+    \lIf{$\neg foundMask[i,j] \land circleMask$}
+    {
+      areaNotTaken++
+    }
+    
+    \lIf{$circleMask$}
+    {
+      areaNewOrangeInFrame++
+    }
+    
+    \lIf{$\neg foundMask[i,j] \land circleMask \land img[i,j]$}
+    {
+      areaFilledNotTaken++
+    }
+   }
     }
     
     /* check that orange is distinct */
     
     \lIf{$areaNotTaken / areaNewOrangeInFrame  \cdot 100 < 10$}
      {
-	return False
+  return False
     }
     
     /* check that non overlaping section is partly filled */
     
     \lIf{$areaFilledNotTaken / areaNewOrangeInFrame  \cdot 100 < 10$}
      {
-	return False
+  return False
     }
     
     return True
@@ -341,15 +354,14 @@ When we were testing our algorithm we noticed that it worked significantly bette
 \end{algorithm}
 
 
-
 \begin{algorithm} 
     \SetKwInOut{Input}{Input}
     \SetKwInOut{Output}{Output}
 
-    \underline{function OrangeCount} $(circle, img,)$\;
+    \underline{function OrangePixelCount} $(circle, img)$\;
     \Input{the circle that is being checked $circle$}
     \Input{the binarized image of oranges $img$}
-    \Output{percentage of pixels that are white $whitePixels$}
+    \Output{percentage of pixels that are orange}
     
         
     circleMask = fillMask(img.size, circle)
@@ -363,22 +375,22 @@ When we were testing our algorithm we noticed that it worked significantly bette
     
     \For{$i \in img.height$}
     {
-    	 \For{$j \in img.width$}
-	 {
-	 	numOutOfFrame$--$
-		
-	 	\lIf{$img[i,j] \land circleMask$}
-		{
-			numOrange$++$
-		}
-	 }
+       \For{$j \in img.width$}
+   {
+    numOutOfFrame$--$
+    
+    \lIf{$img[i,j] \land circleMask$}
+    {
+      numOrange$++$
+    }
+   }
     }
     
     /* check that enough is in frame*/
     
     \lIf{$numOutOfFrame / circleArea  \cdot 100 > 40$}
      {
-	numOrange += numOutOfFrame
+  numOrange += numOutOfFrame
     }
     
     percentFilledInFrame = numOrange / numTotal * 100
@@ -393,6 +405,8 @@ When we were testing our algorithm we noticed that it worked significantly bette
 
 
 \section{Conclusion}
+
+The results produced by this algorithm show that the modified algorithm proposed by Payne is reasonable efficient in detecting oranges. There is a definite need for improvement however, as this algorithm does not deal with varying levels of ripeness an orange can be. Additionally, the part for detecting the oranges themselves is not computationally efficient, and can be improved to speed up program run time. Future work based on this should focus on finding a more efficient algorithm for shape detection within an image, as well as optimizing the colour segmentation portion to handle more varying levels of brighness and clutter.
 
 
 \bibliographystyle{ieeetr}
